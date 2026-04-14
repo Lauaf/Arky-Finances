@@ -5,9 +5,10 @@ APP_NAME = "Arky Finances API"
 API_PREFIX = "/api"
 BASE_CURRENCY = "ARS"
 DEFAULT_PROJECTION_MONTHS = 12
+IS_VERCEL = bool(os.getenv("VERCEL"))
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
-DATA_DIR = BACKEND_DIR / "data"
+DATA_DIR = Path("/tmp/arky-finances") if IS_VERCEL else BACKEND_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DATABASE_PATH = DATA_DIR / "arky_finances.db"
 LOCAL_DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
@@ -25,12 +26,6 @@ def get_database_url() -> str:
     raw_url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
     if raw_url:
         return _normalize_database_url(raw_url)
-
-    if os.getenv("VERCEL"):
-        raise RuntimeError(
-            "Vercel deployment requires DATABASE_URL or POSTGRES_URL. "
-            "Local SQLite is not durable in serverless functions."
-        )
 
     return LOCAL_DATABASE_URL
 

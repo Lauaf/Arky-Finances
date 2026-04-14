@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import API_PREFIX, APP_NAME, CORS_ORIGINS
+from app.core.config import API_PREFIX, APP_NAME, CORS_ORIGINS, DATABASE_URL
 from app.core.database import SessionLocal, init_db
 from app.routers import expenses, goals, incomes, insights, profile, scenarios
 from app.services.seed import seed_database
@@ -31,6 +31,17 @@ app.add_middleware(
 @app.get("/health")
 def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/")
+def root() -> dict[str, str]:
+    database_mode = "external" if not DATABASE_URL.startswith("sqlite") else "sqlite"
+    return {
+        "name": APP_NAME,
+        "status": "ok",
+        "database_mode": database_mode,
+        "docs_url": "/docs",
+    }
 
 
 app.include_router(profile.router, prefix=API_PREFIX)

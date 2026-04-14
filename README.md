@@ -7,7 +7,7 @@ MVP de planificación financiera personal orientado a flujo mensual, metas de ah
 - Frontend: Angular 20
 - Backend: FastAPI + Pydantic + SQLAlchemy
 - Base local: SQLite
-- Producción en Vercel: FastAPI serverless + base persistente externa por `DATABASE_URL`
+- Producción en Vercel: FastAPI serverless, con soporte para `DATABASE_URL` o fallback a SQLite temporal
 - Comunicación: REST
 
 ## Estructura del repo
@@ -60,10 +60,11 @@ MVP de planificación financiera personal orientado a flujo mensual, metas de ah
 
 La app original fue diseñada como herramienta local con SQLite. Eso sigue funcionando en desarrollo.
 
-Para Vercel, SQLite local no es una opción seria de persistencia porque el backend corre como funciones serverless y el almacenamiento local no es durable entre invocaciones o despliegues. Por eso el repo quedó preparado así:
+Para Vercel, el repo quedó preparado así:
 
 - local: SQLite en `backend/data/arky_finances.db`
-- Vercel: usar `DATABASE_URL` o `POSTGRES_URL` con una base externa persistente
+- Vercel: usar `DATABASE_URL` o `POSTGRES_URL` cuando quieras persistencia real
+- Vercel sin variables de base: fallback a SQLite temporal en `/tmp/arky-finances/arky_finances.db`
 
 Opciones razonables para producción:
 
@@ -115,7 +116,8 @@ Crear un proyecto en Vercel con:
 
 Variables de entorno mínimas:
 
-- `DATABASE_URL` o `POSTGRES_URL`
+- ninguna obligatoria para que levante
+- `DATABASE_URL` o `POSTGRES_URL` recomendadas para persistencia real
 
 Opcionales:
 
@@ -174,6 +176,10 @@ El frontend quedó preparado para:
 - frontend compilado con `npm run build`
 - backend local respondió `/health`
 - frontend local respondió `200` en `http://127.0.0.1:4200`
+
+## Limitación del fallback serverless
+
+Si usás el backend en Vercel sin `DATABASE_URL`, la app levanta usando SQLite temporal. Eso resuelve el deploy, pero los datos pueden perderse entre cold starts, reinicios o nuevos despliegues. Para uso real y persistente, seguí usando una base externa.
 
 ## Fuera de alcance del MVP
 
