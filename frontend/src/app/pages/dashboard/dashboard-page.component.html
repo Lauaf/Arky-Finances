@@ -1,0 +1,262 @@
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Dashboard</p>
+    <h1>Visión mensual y proyección de 12 meses</h1>
+    <p class="page-copy">
+      La app parte del flujo mensual, separa ahorro sugerido y muestra qué tan frágil queda el plan bajo cada escenario.
+    </p>
+  </div>
+
+  <div class="header-actions">
+    <label class="field">
+      <span>Escenario activo</span>
+      <select [value]="selectedScenarioId ?? ''" (change)="onScenarioChange($event)">
+        @for (scenario of scenarios; track scenario.id) {
+          <option [value]="scenario.id">{{ scenario.name }}</option>
+        }
+      </select>
+    </label>
+  </div>
+</section>
+
+@if (errorMessage) {
+  <section class="panel error-panel">{{ errorMessage }}</section>
+}
+
+@if (isLoading) {
+  <section class="panel loading-panel">Cargando dashboard financiero...</section>
+} @else if (dashboard && recommendation && projection) {
+  <section class="metrics-grid">
+    <app-metric-card
+      label="Saldo actual"
+      [value]="formatCurrency(dashboard.current_balance)"
+      hint="Saldo líquido disponible para planificar el mes."
+      [tone]="metricTone(dashboard.alert_level)"
+    />
+    <app-metric-card
+      label="Ingresos mensuales"
+      [value]="formatCurrency(dashboard.estimated_income_monthly)"
+      hint="Ingresos estimados según el escenario seleccionado."
+      tone="success"
+    />
+    <app-metric-card
+      label="Gastos fijos"
+      [value]="formatCurrency(dashboard.fixed_expenses_monthly)"
+      hint="Compromisos recurrentes del mes."
+    />
+    <app-metric-card
+      label="Gastos variables"
+      [value]="formatCurrency(dashboard.variable_expenses_monthly)"
+      hint="Consumo y gastos flexibles esperados."
+    />
+    <app-metric-card
+      label="Ahorro disponible"
+      [value]="formatCurrency(dashboard.estimated_available_savings)"
+      hint="Queda después de cubrir gastos del mes."
+      tone="success"
+    />
+    <app-metric-card
+      label="Gasto libre recomendado"
+      [value]="formatCurrency(dashboard.recommended_free_spend)"
+      hint="Máximo sugerido sin romper el plan actual."
+      [tone]="metricTone(dashboard.alert_level)"
+    />
+  </section>
+
+  <section class="alert-banner" [class.tight]="dashboard.alert_level === 'tight'" [class.deficit]="dashboard.alert_level === 'deficit'">
+    <div>
+      <p class="eyebrow">Estado del mes</p>
+      <h2>{{ dashboard.alert_message }}</h2>
+    </div>
+    <div class="alert-metrics">
+      <span>Buffer mínimo: {{ formatCurrency(dashboard.minimum_cash_buffer) }}</span>
+      <span>Escenario: {{ dashboard.scenario.name }}</span>
+    </div>
+  </section>
+
+  <section class="two-column">
+    <article class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Recomendador mensual</p>
+          <h2>Cuánto ahorrar y cuánto podés gastar</h2>
+        </div>
+      </div>
+
+      <div class="recommendation-grid">
+        <app-metric-card
+          label="Ahorro sugerido"
+          [value]="formatCurrency(recommendation.recommended_savings)"
+          [hint]="'Ideal del escenario: ' + formatCurrency(recommendation.ideal_savings_target)"
+          [tone]="recommendation.plan_sustainable ? 'success' : 'warning'"
+        />
+        <app-metric-card
+          label="Tope de gasto libre"
+          [value]="formatCurrency(recommendation.recommended_free_spend)"
+          hint="Monto máximo sugerido para consumo libre este mes."
+          [tone]="metricTone(recommendation.alert_level)"
+        />
+      </div>
+
+      <p class="body-copy">{{ recommendation.explanation }}</p>
+    </article>
+
+    <article class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Perfil financiero</p>
+          <h2>Saldo base y colchón mínimo</h2>
+        </div>
+      </div>
+
+      <form class="form-grid" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+        <label class="field">
+          <span>Saldo actual</span>
+          <input type="number" formControlName="current_balance" />
+        </label>
+
+        <label class="field">
+          <span>Buffer mínimo</span>
+          <input type="number" formControlName="minimum_cash_buffer" />
+        </label>
+
+        <label class="field">
+          <span>Moneda base</span>
+          <input type="text" maxlength="3" formControlName="base_currency" />
+        </label>
+
+        <button type="submit" class="primary-button" [disabled]="profileForm.invalid || isSavingProfile">
+          {{ isSavingProfile ? 'Guardando...' : 'Guardar perfil' }}
+        </button>
+      </form>
+    </article>
+  </section>
+
+  <section class="charts-grid">
+    <article class="panel chart-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Proyección</p>
+          <h2>Saldo y ahorro acumulado</h2>
+        </div>
+      </div>
+      <div class="chart-frame">
+        <canvas baseChart [data]="balanceChartData" [options]="lineChartOptions" [type]="'line'"></canvas>
+      </div>
+    </article>
+
+    <article class="panel chart-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Escenarios</p>
+          <h2>Comparación de saldo proyectado</h2>
+        </div>
+      </div>
+      <div class="chart-frame">
+        <canvas baseChart [data]="comparisonChartData" [options]="lineChartOptions" [type]="'line'"></canvas>
+      </div>
+    </article>
+  </section>
+
+  <section class="charts-grid">
+    <article class="panel chart-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Objetivos activos</p>
+          <h2>Progreso proyectado por objetivo</h2>
+        </div>
+      </div>
+      <div class="chart-frame">
+        <canvas baseChart [data]="goalsChartData" [options]="goalChartOptions" [type]="'bar'"></canvas>
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Escenario seleccionado</p>
+          <h2>{{ selectedScenario?.name }}</h2>
+        </div>
+      </div>
+
+      <p class="body-copy">{{ selectedScenario?.description }}</p>
+      <div class="scenario-stats">
+        <span>Inflación mensual: {{ formatPercent(selectedScenario?.inflation_monthly ?? 0) }}</span>
+        <span>Ajuste salarial: {{ formatPercent(selectedScenario?.salary_adjustment_rate ?? 0) }}</span>
+        <span>Ahorro objetivo: {{ formatPercent(selectedScenario?.target_savings_rate ?? 0) }}</span>
+        <span>Gasto inesperado: {{ formatCurrency(selectedScenario?.unexpected_expense_amount ?? 0) }}</span>
+      </div>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Objetivos</p>
+        <h2>Resumen de objetivos activos</h2>
+      </div>
+    </div>
+
+    <div class="goal-list">
+      @for (goal of dashboard.active_goals; track goal.id) {
+        <article class="goal-card">
+          <div class="goal-head">
+            <div>
+              <strong>{{ goal.name }}</strong>
+              <small>Prioridad {{ goal.priority }} · vence {{ goal.target_date }}</small>
+            </div>
+            <span class="status-chip">{{ goal.status }}</span>
+          </div>
+          <div class="goal-bar">
+            <span [style.width.%]="goal.percent_complete"></span>
+          </div>
+          <div class="goal-meta">
+            <span>{{ formatCurrency(goal.projected_progress) }} / {{ formatCurrency(goal.target_amount) }}</span>
+            <span>{{ goal.percent_complete }}%</span>
+            <span>
+              {{ goal.projected_completion_month ? 'Llega en ' + goal.projected_completion_month : 'Sin fecha dentro de 12 meses' }}
+            </span>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Detalle mensual</p>
+        <h2>Flujo proyectado por mes</h2>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Ingresos</th>
+            <th>Gastos</th>
+            <th>Ahorro sugerido</th>
+            <th>Gasto libre</th>
+            <th>Saldo cierre</th>
+            <th>Alerta</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (month of projection.months; track month.month) {
+            <tr>
+              <td>{{ month.month }}</td>
+              <td>{{ formatCurrency(month.income_total) }}</td>
+              <td>{{ formatCurrency(month.total_expenses) }}</td>
+              <td>{{ formatCurrency(month.recommended_savings) }}</td>
+              <td>{{ formatCurrency(month.free_spending_max) }}</td>
+              <td>{{ formatCurrency(month.closing_balance) }}</td>
+              <td><span class="status-chip">{{ month.alert_level }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}

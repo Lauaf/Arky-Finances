@@ -1,0 +1,32 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">AF</span>
+      <div>
+        <p>Arky Finances</p>
+        <small>MVP local para planificación mensual</small>
+      </div>
+    </div>
+
+    <nav class="nav">
+      @for (item of navigation; track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="nav-link"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-note">
+      <p>Enfocada en flujo mensual, metas y simulación de escenarios.</p>
+    </div>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

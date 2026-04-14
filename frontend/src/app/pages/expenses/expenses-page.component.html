@@ -1,0 +1,127 @@
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Gastos</p>
+    <h1>Gastos fijos y variables</h1>
+    <p class="page-copy">Separá compromisos recurrentes del gasto flexible para estimar mejor tu ahorro disponible.</p>
+  </div>
+</section>
+
+@if (errorMessage) {
+  <section class="panel error-panel">{{ errorMessage }}</section>
+}
+
+<section class="two-column">
+  <article class="panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Formulario</p>
+        <h2>{{ editingExpenseId ? 'Editar gasto' : 'Nuevo gasto' }}</h2>
+      </div>
+    </div>
+
+    <form class="form-grid" [formGroup]="expenseForm" (ngSubmit)="saveExpense()">
+      <label class="field">
+        <span>Nombre</span>
+        <input type="text" formControlName="name" />
+      </label>
+
+      <label class="field">
+        <span>Categoría</span>
+        <input type="text" formControlName="category" />
+      </label>
+
+      <label class="field">
+        <span>Monto</span>
+        <input type="number" formControlName="amount" />
+      </label>
+
+      <label class="field">
+        <span>Moneda</span>
+        <input type="text" maxlength="3" formControlName="currency" />
+      </label>
+
+      <label class="field">
+        <span>Tipo</span>
+        <select formControlName="expense_type">
+          <option value="fixed">Fijo</option>
+          <option value="variable">Variable</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Recurrencia</span>
+        <select formControlName="recurrence">
+          <option value="monthly">Mensual</option>
+          <option value="one_time">Puntual</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Fecha o mes</span>
+        <input type="date" formControlName="start_date" />
+      </label>
+
+      <label class="field full-width">
+        <span>Notas</span>
+        <textarea rows="4" formControlName="notes"></textarea>
+      </label>
+
+      <div class="button-row">
+        <button type="submit" class="primary-button" [disabled]="expenseForm.invalid || isSaving">
+          {{ isSaving ? 'Guardando...' : editingExpenseId ? 'Actualizar gasto' : 'Crear gasto' }}
+        </button>
+        @if (editingExpenseId) {
+          <button type="button" class="secondary-button" (click)="cancelEdit()">Cancelar</button>
+        }
+      </div>
+    </form>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Listado</p>
+        <h2>Gastos cargados</h2>
+      </div>
+    </div>
+
+    @if (isLoading) {
+      <p class="body-copy">Cargando gastos...</p>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Monto</th>
+              <th>Tipo</th>
+              <th>Recurrencia</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (expense of expenses; track expense.id) {
+              <tr>
+                <td>
+                  <strong>{{ expense.name }}</strong>
+                  @if (expense.notes) {
+                    <small class="row-note">{{ expense.notes }}</small>
+                  }
+                </td>
+                <td>{{ expense.category }}</td>
+                <td>{{ formatCurrency(expense.amount) }}</td>
+                <td>{{ expense.expense_type === 'fixed' ? 'Fijo' : 'Variable' }}</td>
+                <td>{{ expense.recurrence === 'monthly' ? 'Mensual' : 'Puntual' }}</td>
+                <td class="table-actions">
+                  <button type="button" class="secondary-button" (click)="editExpense(expense)">Editar</button>
+                  <button type="button" class="danger-button" (click)="deleteExpense(expense)">Eliminar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </article>
+</section>

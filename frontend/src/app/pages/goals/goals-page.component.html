@@ -1,0 +1,113 @@
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Objetivos</p>
+    <h1>Metas de ahorro y compras grandes</h1>
+    <p class="page-copy">Priorizá objetivos, definí aportes ideales y seguí el progreso actual de cada meta.</p>
+  </div>
+</section>
+
+@if (errorMessage) {
+  <section class="panel error-panel">{{ errorMessage }}</section>
+}
+
+<section class="two-column">
+  <article class="panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Formulario</p>
+        <h2>{{ editingGoalId ? 'Editar objetivo' : 'Nuevo objetivo' }}</h2>
+      </div>
+    </div>
+
+    <form class="form-grid" [formGroup]="goalForm" (ngSubmit)="saveGoal()">
+      <label class="field">
+        <span>Nombre</span>
+        <input type="text" formControlName="name" />
+      </label>
+
+      <label class="field">
+        <span>Monto objetivo</span>
+        <input type="number" formControlName="target_amount" />
+      </label>
+
+      <label class="field">
+        <span>Moneda</span>
+        <input type="text" maxlength="3" formControlName="currency" />
+      </label>
+
+      <label class="field">
+        <span>Fecha objetivo</span>
+        <input type="date" formControlName="target_date" />
+      </label>
+
+      <label class="field">
+        <span>Prioridad</span>
+        <input type="number" min="1" max="5" formControlName="priority" />
+      </label>
+
+      <label class="field">
+        <span>Aporte mensual ideal</span>
+        <input type="number" formControlName="monthly_contribution_ideal" />
+      </label>
+
+      <label class="field">
+        <span>Progreso actual</span>
+        <input type="number" formControlName="current_progress" />
+      </label>
+
+      <label class="field">
+        <span>Probabilidad futura</span>
+        <input type="number" min="0" max="100" formControlName="future_probability" />
+      </label>
+
+      <div class="button-row">
+        <button type="submit" class="primary-button" [disabled]="goalForm.invalid || isSaving">
+          {{ isSaving ? 'Guardando...' : editingGoalId ? 'Actualizar objetivo' : 'Crear objetivo' }}
+        </button>
+        @if (editingGoalId) {
+          <button type="button" class="secondary-button" (click)="cancelEdit()">Cancelar</button>
+        }
+      </div>
+    </form>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Listado</p>
+        <h2>Objetivos cargados</h2>
+      </div>
+    </div>
+
+    @if (isLoading) {
+      <p class="body-copy">Cargando objetivos...</p>
+    } @else {
+      <div class="goal-list">
+        @for (goal of goals; track goal.id) {
+          <article class="goal-card">
+            <div class="goal-head">
+              <div>
+                <strong>{{ goal.name }}</strong>
+                <small>Prioridad {{ goal.priority }} · fecha objetivo {{ goal.target_date }}</small>
+              </div>
+              <div class="table-actions">
+                <button type="button" class="secondary-button" (click)="editGoal(goal)">Editar</button>
+                <button type="button" class="danger-button" (click)="deleteGoal(goal)">Eliminar</button>
+              </div>
+            </div>
+
+            <div class="goal-bar">
+              <span [style.width.%]="progressPercent(goal)"></span>
+            </div>
+
+            <div class="goal-meta">
+              <span>{{ formatCurrency(goal.current_progress) }} / {{ formatCurrency(goal.target_amount) }}</span>
+              <span>{{ progressPercent(goal) }}%</span>
+              <span>Aporte ideal: {{ formatCurrency(goal.monthly_contribution_ideal) }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </article>
+</section>

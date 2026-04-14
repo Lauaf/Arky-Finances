@@ -1,0 +1,153 @@
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.alert-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1.2rem 1.3rem;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(216, 255, 241, 0.88), rgba(255, 255, 255, 0.94));
+  border: 1px solid rgba(0, 106, 113, 0.12);
+}
+
+.alert-banner.tight {
+  background: linear-gradient(135deg, rgba(255, 242, 214, 0.92), rgba(255, 255, 255, 0.95));
+}
+
+.alert-banner.deficit {
+  background: linear-gradient(135deg, rgba(255, 226, 221, 0.96), rgba(255, 255, 255, 0.97));
+}
+
+.alert-banner h2 {
+  margin: 0.35rem 0 0;
+}
+
+.alert-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--text-muted);
+}
+
+.recommendation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.chart-panel {
+  min-height: 360px;
+}
+
+.chart-frame {
+  position: relative;
+  height: 290px;
+}
+
+.scenario-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  color: var(--text-muted);
+}
+
+.goal-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.goal-card {
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(244, 248, 250, 0.92);
+}
+
+.goal-head,
+.goal-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.goal-head small,
+.goal-meta {
+  color: var(--text-muted);
+}
+
+.goal-bar {
+  height: 12px;
+  margin: 0.75rem 0;
+  border-radius: 999px;
+  background: rgba(12, 28, 38, 0.08);
+  overflow: hidden;
+}
+
+.goal-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-strong), var(--accent));
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(0, 106, 113, 0.1);
+  color: var(--accent-strong);
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.loading-panel,
+.error-panel {
+  margin-bottom: 1rem;
+}
+
+.error-panel {
+  color: #942b0d;
+  background: rgba(255, 226, 221, 0.96);
+}
+
+@media (max-width: 1440px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .charts-grid,
+  .recommendation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alert-banner,
+  .goal-head,
+  .goal-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .metrics-grid,
+  .scenario-stats {
+    grid-template-columns: 1fr;
+  }
+}

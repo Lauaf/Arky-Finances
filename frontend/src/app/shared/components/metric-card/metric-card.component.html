@@ -1,0 +1,12 @@
+<article
+  class="metric-card"
+  [class.success]="tone() === 'success'"
+  [class.warning]="tone() === 'warning'"
+  [class.danger]="tone() === 'danger'"
+>
+  <p class="label">{{ label() }}</p>
+  <strong class="value">{{ value() }}</strong>
+  @if (hint()) {
+    <small class="hint">{{ hint() }}</small>
+  }
+</article>

@@ -1,0 +1,18 @@
+[project]
+name = "arky-finances-backend"
+version = "0.1.0"
+description = "Local FastAPI backend for Arky Finances."
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi==0.115.12",
+  "uvicorn[standard]==0.34.2",
+  "sqlalchemy==2.0.40",
+  "pydantic==2.11.3",
+  "psycopg[binary]>=3.2,<4",
+]
+
+[tool.uvicorn]
+factory = false
+host = "127.0.0.1"
+port = 8000
+reload = true

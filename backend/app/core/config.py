@@ -1,0 +1,50 @@
+import os
+from pathlib import Path
+
+APP_NAME = "Arky Finances API"
+API_PREFIX = "/api"
+BASE_CURRENCY = "ARS"
+DEFAULT_PROJECTION_MONTHS = 12
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+DATA_DIR = BACKEND_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DATABASE_PATH = DATA_DIR / "arky_finances.db"
+LOCAL_DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
+
+
+def _normalize_database_url(raw_url: str) -> str:
+    if raw_url.startswith("postgres://"):
+        return raw_url.replace("postgres://", "postgresql+psycopg://", 1)
+    if raw_url.startswith("postgresql://"):
+        return raw_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return raw_url
+
+
+def get_database_url() -> str:
+    raw_url = os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
+    if raw_url:
+        return _normalize_database_url(raw_url)
+
+    if os.getenv("VERCEL"):
+        raise RuntimeError(
+            "Vercel deployment requires DATABASE_URL or POSTGRES_URL. "
+            "Local SQLite is not durable in serverless functions."
+        )
+
+    return LOCAL_DATABASE_URL
+
+
+def get_cors_origins() -> list[str]:
+    raw_origins = os.getenv("CORS_ORIGINS")
+    if raw_origins:
+        return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+
+    return [
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+    ]
+
+
+DATABASE_URL = get_database_url()
+CORS_ORIGINS = get_cors_origins()

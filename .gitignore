@@ -1,0 +1,10 @@
+backend/data/*.db
+backend/data/*.sqlite3
+backend/**/__pycache__/
+backend/**/*.pyc
+frontend/node_modules/
+frontend/dist/
+backend/.vercel/
+frontend/.vercel/
+backend/.env.local
+frontend/.env.local

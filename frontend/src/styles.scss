@@ -1,0 +1,260 @@
+:root {
+  --bg: #f4efe6;
+  --bg-accent: #dceae9;
+  --panel: rgba(255, 255, 255, 0.88);
+  --panel-strong: #ffffff;
+  --accent: #5ec7bc;
+  --accent-strong: #006a71;
+  --earth: #d95d39;
+  --text-strong: #112b38;
+  --text-muted: #5d6d75;
+  --shadow: 0 24px 50px rgba(17, 43, 56, 0.08);
+  --border: rgba(17, 43, 56, 0.1);
+  --font-display: 'Bahnschrift', 'Trebuchet MS', sans-serif;
+  --font-body: 'Segoe UI Variable', 'Gill Sans', 'Trebuchet MS', sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top right, rgba(94, 199, 188, 0.22), transparent 24%),
+    linear-gradient(180deg, #f8f2e9 0%, var(--bg) 38%, var(--bg-accent) 100%);
+  color: var(--text-strong);
+  font-family: var(--font-body);
+}
+
+body {
+  line-height: 1.5;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.eyebrow {
+  margin-bottom: 0.4rem;
+  color: var(--earth);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.page-copy,
+.body-copy {
+  max-width: 72ch;
+  color: var(--text-muted);
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.panel {
+  padding: 1.3rem;
+  border-radius: 28px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.panel-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.field,
+.checkbox-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.field span,
+.checkbox-field span {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 0.85rem 0.95rem;
+  border-radius: 16px;
+  border: 1px solid rgba(17, 43, 56, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--text-strong);
+}
+
+.checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  padding-top: 2rem;
+}
+
+.checkbox-field input {
+  width: 18px;
+  height: 18px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.8rem 1.15rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.danger-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(17, 43, 56, 0.1);
+}
+
+.primary-button {
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: white;
+}
+
+.secondary-button {
+  background: rgba(17, 43, 56, 0.08);
+  color: var(--text-strong);
+}
+
+.danger-button {
+  background: rgba(217, 93, 57, 0.12);
+  color: #a3381b;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.danger-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.9rem 0.75rem;
+  border-bottom: 1px solid rgba(17, 43, 56, 0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.row-note {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--text-muted);
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1100px) {
+  .two-column,
+  .form-grid,
+  .page-header {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width,
+  .button-row {
+    grid-column: auto;
+  }
+}

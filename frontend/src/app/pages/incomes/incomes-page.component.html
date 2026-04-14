@@ -1,0 +1,119 @@
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Ingresos</p>
+    <h1>Ingresos recurrentes y extraordinarios</h1>
+    <p class="page-copy">Definí sueldo, freelance u otros ingresos puntuales para alimentar la proyección mensual.</p>
+  </div>
+</section>
+
+@if (errorMessage) {
+  <section class="panel error-panel">{{ errorMessage }}</section>
+}
+
+<section class="two-column">
+  <article class="panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Formulario</p>
+        <h2>{{ editingIncomeId ? 'Editar ingreso' : 'Nuevo ingreso' }}</h2>
+      </div>
+    </div>
+
+    <form class="form-grid" [formGroup]="incomeForm" (ngSubmit)="saveIncome()">
+      <label class="field">
+        <span>Nombre</span>
+        <input type="text" formControlName="name" />
+      </label>
+
+      <label class="field">
+        <span>Monto</span>
+        <input type="number" formControlName="amount" />
+      </label>
+
+      <label class="field">
+        <span>Moneda</span>
+        <input type="text" maxlength="3" formControlName="currency" />
+      </label>
+
+      <label class="field">
+        <span>Fecha o mes</span>
+        <input type="date" formControlName="start_date" />
+      </label>
+
+      <label class="field">
+        <span>Recurrencia</span>
+        <select formControlName="recurrence">
+          <option value="monthly">Mensual</option>
+          <option value="one_time">Extraordinario</option>
+        </select>
+      </label>
+
+      <label class="checkbox-field">
+        <input type="checkbox" formControlName="is_salary_adjusted" />
+        <span>Aplica ajustes salariales del escenario</span>
+      </label>
+
+      <label class="field full-width">
+        <span>Notas</span>
+        <textarea rows="4" formControlName="notes"></textarea>
+      </label>
+
+      <div class="button-row">
+        <button type="submit" class="primary-button" [disabled]="incomeForm.invalid || isSaving">
+          {{ isSaving ? 'Guardando...' : editingIncomeId ? 'Actualizar ingreso' : 'Crear ingreso' }}
+        </button>
+        @if (editingIncomeId) {
+          <button type="button" class="secondary-button" (click)="cancelEdit()">Cancelar</button>
+        }
+      </div>
+    </form>
+  </article>
+
+  <article class="panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Listado</p>
+        <h2>Ingresos cargados</h2>
+      </div>
+    </div>
+
+    @if (isLoading) {
+      <p class="body-copy">Cargando ingresos...</p>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Monto</th>
+              <th>Fecha</th>
+              <th>Recurrencia</th>
+              <th>Ajuste</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (income of incomes; track income.id) {
+              <tr>
+                <td>
+                  <strong>{{ income.name }}</strong>
+                  @if (income.notes) {
+                    <small class="row-note">{{ income.notes }}</small>
+                  }
+                </td>
+                <td>{{ formatCurrency(income.amount) }}</td>
+                <td>{{ income.start_date }}</td>
+                <td>{{ income.recurrence === 'monthly' ? 'Mensual' : 'Extraordinario' }}</td>
+                <td>{{ income.is_salary_adjusted ? 'Sí' : 'No' }}</td>
+                <td class="table-actions">
+                  <button type="button" class="secondary-button" (click)="editIncome(income)">Editar</button>
+                  <button type="button" class="danger-button" (click)="deleteIncome(income)">Eliminar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </article>
+</section>

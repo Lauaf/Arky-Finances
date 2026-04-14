@@ -1,0 +1,44 @@
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.15rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(12, 28, 38, 0.08);
+  box-shadow: 0 16px 32px rgba(18, 34, 45, 0.08);
+}
+
+.label,
+.hint {
+  margin: 0;
+}
+
+.label {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.value {
+  font-size: 1.5rem;
+  color: var(--text-strong);
+}
+
+.hint {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.metric-card.success {
+  background: linear-gradient(180deg, rgba(216, 255, 241, 0.9), rgba(255, 255, 255, 0.95));
+}
+
+.metric-card.warning {
+  background: linear-gradient(180deg, rgba(255, 242, 214, 0.95), rgba(255, 255, 255, 0.96));
+}
+
+.metric-card.danger {
+  background: linear-gradient(180deg, rgba(255, 226, 221, 0.96), rgba(255, 255, 255, 0.96));
+}
