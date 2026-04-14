@@ -14,12 +14,14 @@ import {
   RecommendationResponse,
   Scenario,
 } from '../../core/models/finance.models';
+import { DisplayFormatService } from '../../core/services/display-format.service';
 import { ExpenseService } from '../../core/services/expense.service';
 import { GoalService } from '../../core/services/goal.service';
 import { IncomeService } from '../../core/services/income.service';
 import { InsightsService } from '../../core/services/insights.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { ScenarioService } from '../../core/services/scenario.service';
+import { UserContextService } from '../../core/services/user-context.service';
 import { MetricCardComponent } from '../../shared/components/metric-card/metric-card.component';
 
 interface SetupSnapshot {
@@ -52,7 +54,8 @@ export class DashboardPageComponent {
   private readonly incomeService = inject(IncomeService);
   private readonly expenseService = inject(ExpenseService);
   private readonly goalService = inject(GoalService);
-  private readonly tutorialStorageKey = 'arky-finances-dashboard-guide-hidden';
+  private readonly displayFormat = inject(DisplayFormatService);
+  private readonly userContext = inject(UserContextService);
 
   protected scenarios: Scenario[] = [];
   protected selectedScenarioId: number | null = null;
@@ -275,11 +278,7 @@ export class DashboardPageComponent {
   }
 
   protected formatCurrency(value: number, currency = this.dashboard?.base_currency ?? 'ARS'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0,
-    }).format(value);
+    return this.displayFormat.formatCurrency(value, currency);
   }
 
   protected formatPercent(value: number): string {
@@ -391,6 +390,7 @@ export class DashboardPageComponent {
             goals: goals.length,
           };
           this.profileForm.patchValue(profile);
+          this.userContext.setBaseCurrency(profile.base_currency);
           this.isLoading = false;
         },
         error: () => {
@@ -401,24 +401,24 @@ export class DashboardPageComponent {
   }
 
   protected formatMonth(value: string): string {
-    const [year, month] = value.split('-').map(Number);
-    return new Date(year, month - 1, 1).toLocaleDateString('en-US', {
-      month: 'short',
-      year: 'numeric',
-    });
+    return this.displayFormat.formatMonth(value);
   }
 
   private readTutorialVisibility(): boolean {
     if (typeof window === 'undefined') {
       return true;
     }
-    return window.localStorage.getItem(this.tutorialStorageKey) !== 'hidden';
+    return window.localStorage.getItem(this.tutorialStorageKey()) !== 'hidden';
   }
 
   private writeTutorialVisibility(visible: boolean): void {
     if (typeof window === 'undefined') {
       return;
     }
-    window.localStorage.setItem(this.tutorialStorageKey, visible ? 'visible' : 'hidden');
+    window.localStorage.setItem(this.tutorialStorageKey(), visible ? 'visible' : 'hidden');
+  }
+
+  private tutorialStorageKey(): string {
+    return `arky-finances-dashboard-guide-hidden:${this.userContext.activeUserId() ?? 'default'}`;
   }
 }

@@ -1,10 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, effect, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Income, IncomePayload, RecurrenceType } from '../../core/models/finance.models';
+import { DisplayFormatService } from '../../core/services/display-format.service';
 import { IncomeService } from '../../core/services/income.service';
+import { UserContextService } from '../../core/services/user-context.service';
+
+type IncomePreset = 'salary' | 'freelance' | 'bonus' | 'sale';
 
 @Component({
   selector: 'app-incomes-page',
@@ -17,6 +21,8 @@ export class IncomesPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly formBuilder = inject(FormBuilder);
   private readonly incomeService = inject(IncomeService);
+  private readonly displayFormat = inject(DisplayFormatService);
+  private readonly userContext = inject(UserContextService);
 
   protected incomes: Income[] = [];
   protected editingIncomeId: number | null = null;
@@ -27,7 +33,7 @@ export class IncomesPageComponent {
   protected readonly incomeForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
     amount: [0, [Validators.required, Validators.min(1)]],
-    currency: ['ARS', [Validators.required, Validators.minLength(3), Validators.maxLength(3)]],
+    currency: [this.defaultCurrency(), [Validators.required, Validators.minLength(3), Validators.maxLength(3)]],
     start_date: [this.todayString(), Validators.required],
     recurrence: this.formBuilder.nonNullable.control<RecurrenceType>('monthly', Validators.required),
     is_salary_adjusted: [true],
@@ -35,7 +41,86 @@ export class IncomesPageComponent {
   });
 
   constructor() {
+    effect(() => {
+      const currency = this.defaultCurrency();
+      if (this.editingIncomeId === null && !this.incomeForm.controls.currency.dirty) {
+        this.incomeForm.patchValue({ currency }, { emitEvent: false });
+      }
+    });
     this.loadIncomes();
+  }
+
+  protected applyPreset(preset: IncomePreset): void {
+    const common = {
+      currency: this.defaultCurrency(),
+      start_date: this.monthOffsetString(0),
+    };
+
+    if (preset === 'salary') {
+      this.incomeForm.patchValue({
+        ...common,
+        name: 'Main salary',
+        recurrence: 'monthly',
+        is_salary_adjusted: true,
+        notes: 'Recurring income used to fund the month.',
+      });
+      return;
+    }
+
+    if (preset === 'freelance') {
+      this.incomeForm.patchValue({
+        ...common,
+        name: 'Freelance retainer',
+        recurrence: 'monthly',
+        is_salary_adjusted: false,
+        notes: 'Recurring side income that arrives most months.',
+      });
+      return;
+    }
+
+    if (preset === 'bonus') {
+      this.incomeForm.patchValue({
+        ...common,
+        name: 'Bonus',
+        recurrence: 'one_time',
+        is_salary_adjusted: false,
+        notes: 'One-time cash inflow for a specific month.',
+      });
+      return;
+    }
+
+    this.incomeForm.patchValue({
+      ...common,
+      name: 'Asset sale',
+      recurrence: 'one_time',
+      is_salary_adjusted: false,
+      notes: 'One-off money from selling something or receiving cash back.',
+    });
+  }
+
+  protected scheduleThisMonth(): void {
+    this.incomeForm.patchValue({
+      start_date: this.monthOffsetString(0),
+    });
+  }
+
+  protected scheduleNextMonth(): void {
+    this.incomeForm.patchValue({
+      start_date: this.monthOffsetString(1),
+    });
+  }
+
+  protected makeRecurring(): void {
+    this.incomeForm.patchValue({
+      recurrence: 'monthly',
+    });
+  }
+
+  protected makeOneTime(): void {
+    this.incomeForm.patchValue({
+      recurrence: 'one_time',
+      is_salary_adjusted: false,
+    });
   }
 
   protected saveIncome(): void {
@@ -91,11 +176,7 @@ export class IncomesPageComponent {
   }
 
   protected formatCurrency(value: number, currency = 'ARS'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0,
-    }).format(value);
+    return this.displayFormat.formatCurrency(value, currency);
   }
 
   protected recurrenceLabel(recurrence: RecurrenceType): string {
@@ -140,7 +221,7 @@ export class IncomesPageComponent {
     this.incomeForm.reset({
       name: '',
       amount: 0,
-      currency: 'ARS',
+      currency: this.defaultCurrency(),
       start_date: this.todayString(),
       recurrence: 'monthly',
       is_salary_adjusted: true,
@@ -150,5 +231,16 @@ export class IncomesPageComponent {
 
   private todayString(): string {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private defaultCurrency(): string {
+    return this.userContext.baseCurrency() || 'ARS';
+  }
+
+  private monthOffsetString(offset: number): string {
+    const value = new Date();
+    value.setHours(12, 0, 0, 0);
+    value.setMonth(value.getMonth() + offset, 1);
+    return value.toISOString().slice(0, 10);
   }
 }

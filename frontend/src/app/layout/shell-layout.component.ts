@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { WorkspaceUser } from '../core/models/finance.models';
+import { ProfileService } from '../core/services/profile.service';
 import { UserContextService } from '../core/services/user-context.service';
 import { UserService } from '../core/services/user.service';
 
@@ -20,9 +21,11 @@ export class ShellLayoutComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly userService = inject(UserService);
   private readonly userContext = inject(UserContextService);
+  private readonly profileService = inject(ProfileService);
 
   protected readonly navigation = [
     { label: 'Overview', route: '/dashboard' },
+    { label: 'Analytics', route: '/analytics' },
     { label: 'Income', route: '/incomes' },
     { label: 'Expenses', route: '/expenses' },
     { label: 'Goals', route: '/goals' },
@@ -38,6 +41,7 @@ export class ShellLayoutComponent {
     name: ['', [Validators.required, Validators.minLength(2)]],
     locale: ['en-US', [Validators.required]],
     timezone: ['America/Argentina/Buenos_Aires', [Validators.required]],
+    base_currency: ['ARS', [Validators.required, Validators.minLength(3), Validators.maxLength(3)]],
   });
 
   constructor() {
@@ -54,6 +58,8 @@ export class ShellLayoutComponent {
       return;
     }
 
+    const nextUser = this.users.find((user) => user.id === nextId) ?? null;
+    this.userContext.setActiveUser(nextUser);
     this.userContext.setActiveUserId(nextId);
     window.location.reload();
   }
@@ -74,7 +80,9 @@ export class ShellLayoutComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (user) => {
+          this.userContext.setActiveUser(user);
           this.userContext.setActiveUserId(user.id);
+          this.userContext.setBaseCurrency(this.userForm.getRawValue().base_currency);
           window.location.reload();
         },
         error: () => {
@@ -88,6 +96,7 @@ export class ShellLayoutComponent {
       this.userForm.patchValue({
         locale: 'en-US',
         timezone: 'America/Argentina/Buenos_Aires',
+        base_currency: 'ARS',
       });
       return;
     }
@@ -96,6 +105,7 @@ export class ShellLayoutComponent {
       this.userForm.patchValue({
         locale: 'en-US',
         timezone: 'Asia/Tokyo',
+        base_currency: 'JPY',
       });
     }
   }
@@ -110,10 +120,26 @@ export class ShellLayoutComponent {
           const storedUserId = this.userContext.activeUserId();
           const activeUser = users.find((user) => user.id === storedUserId) ?? users[0];
           this.activeUserId = activeUser?.id ?? null;
+          this.userContext.setActiveUser(activeUser ?? null);
           this.userContext.setActiveUserId(this.activeUserId);
+          this.loadProfilePreferences();
         },
         error: () => {
           this.userErrorMessage = 'I could not load the user list.';
+        },
+      });
+  }
+
+  private loadProfilePreferences(): void {
+    this.profileService
+      .getProfile()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (profile) => {
+          this.userContext.setBaseCurrency(profile.base_currency);
+        },
+        error: () => {
+          // Keep the last stored currency if the profile call fails.
         },
       });
   }

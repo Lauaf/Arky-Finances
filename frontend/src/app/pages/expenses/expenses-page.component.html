@@ -51,6 +51,28 @@
       </div>
     </div>
 
+    <div class="planner-strip">
+      <div class="planner-block">
+        <p class="eyebrow">Quick presets</p>
+        <div class="planner-chip-row">
+          <button type="button" class="ghost-button planner-chip" (click)="applyPreset('rent')">Rent</button>
+          <button type="button" class="ghost-button planner-chip" (click)="applyPreset('groceries')">Groceries</button>
+          <button type="button" class="ghost-button planner-chip" (click)="applyPreset('subscription')">Subscription</button>
+          <button type="button" class="ghost-button planner-chip" (click)="applyPreset('repair')">Repair</button>
+        </div>
+      </div>
+
+      <div class="planner-block">
+        <p class="eyebrow">Schedule helpers</p>
+        <div class="planner-chip-row">
+          <button type="button" class="secondary-button planner-chip" (click)="scheduleThisMonth()">This month</button>
+          <button type="button" class="secondary-button planner-chip" (click)="scheduleNextMonth()">Next month</button>
+          <button type="button" class="secondary-button planner-chip" (click)="makeRecurring()">Recurring</button>
+          <button type="button" class="secondary-button planner-chip" (click)="makeOneTime()">One time</button>
+        </div>
+      </div>
+    </div>
+
     <form class="form-grid" [formGroup]="expenseForm" (ngSubmit)="saveExpense()">
       <label class="field">
         <span>Name</span>

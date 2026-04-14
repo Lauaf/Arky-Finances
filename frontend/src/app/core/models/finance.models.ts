@@ -13,6 +13,7 @@ export interface WorkspaceUserPayload {
   name: string;
   locale: string;
   timezone: string;
+  base_currency?: string | null;
 }
 
 export interface Profile {

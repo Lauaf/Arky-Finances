@@ -10,6 +10,21 @@ from app.schemas.user import UserCreate, UserRead, UserUpdate
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+def infer_base_currency(payload: UserCreate | UserUpdate) -> str:
+    explicit = (payload.base_currency or "").strip().upper()
+    if explicit:
+        return explicit
+
+    timezone = payload.timezone.lower()
+    locale = payload.locale.lower()
+
+    if "tokyo" in timezone or locale.endswith("-jp"):
+        return "JPY"
+    if "argentina" in timezone or locale.endswith("-ar"):
+        return "ARS"
+    return "ARS"
+
+
 @router.get("", response_model=list[UserRead])
 def list_users(db: Session = Depends(get_db)) -> list[User]:
     return list(db.scalars(select(User).order_by(User.id.asc())).all())
@@ -17,10 +32,17 @@ def list_users(db: Session = Depends(get_db)) -> list[User]:
 
 @router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def create_user(payload: UserCreate, db: Session = Depends(get_db)) -> User:
-    user = User(**payload.model_dump())
+    user = User(**payload.model_dump(exclude={"base_currency"}))
     db.add(user)
     db.flush()
-    db.add(Profile(user_id=user.id, current_balance=0, minimum_cash_buffer=0, base_currency="ARS"))
+    db.add(
+        Profile(
+            user_id=user.id,
+            current_balance=0,
+            minimum_cash_buffer=0,
+            base_currency=infer_base_currency(payload),
+        )
+    )
     db.commit()
     db.refresh(user)
     return user
@@ -32,8 +54,22 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
 
-    for key, value in payload.model_dump().items():
+    for key, value in payload.model_dump(exclude={"base_currency"}).items():
         setattr(user, key, value)
+
+    if payload.base_currency:
+        profile = db.scalar(select(Profile).where(Profile.user_id == user.id).limit(1))
+        if profile is None:
+            profile = Profile(
+                user_id=user.id,
+                current_balance=0,
+                minimum_cash_buffer=0,
+                base_currency=infer_base_currency(payload),
+            )
+            db.add(profile)
+        else:
+            profile.base_currency = infer_base_currency(payload)
+
     db.commit()
     db.refresh(user)
     return user

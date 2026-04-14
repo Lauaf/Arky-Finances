@@ -1,0 +1,91 @@
+:host {
+  display: block;
+}
+
+.analytics-intro {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.chart-panel {
+  min-height: 360px;
+}
+
+.chart-frame {
+  position: relative;
+  height: 300px;
+}
+
+.comparison-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.comparison-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 240px));
+  gap: 1rem;
+}
+
+.comparison-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.comparison-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.month-snapshot {
+  display: grid;
+  gap: 1rem;
+}
+
+.snapshot-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.snapshot-head small {
+  color: var(--muted);
+}
+
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  color: var(--muted);
+}
+
+.snapshot-grid strong {
+  display: block;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.scenario-select {
+  min-width: min(100%, 240px);
+}
+
+@media (max-width: 1180px) {
+  .comparison-metrics,
+  .comparison-columns,
+  .comparison-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .snapshot-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .snapshot-grid {
+    grid-template-columns: 1fr;
+  }
+}

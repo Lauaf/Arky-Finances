@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, effect, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Goal, GoalPayload } from '../../core/models/finance.models';
+import { DisplayFormatService } from '../../core/services/display-format.service';
 import { GoalService } from '../../core/services/goal.service';
+import { UserContextService } from '../../core/services/user-context.service';
 
 @Component({
   selector: 'app-goals-page',
@@ -17,6 +19,8 @@ export class GoalsPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly formBuilder = inject(FormBuilder);
   private readonly goalService = inject(GoalService);
+  private readonly displayFormat = inject(DisplayFormatService);
+  private readonly userContext = inject(UserContextService);
 
   protected goals: Goal[] = [];
   protected editingGoalId: number | null = null;
@@ -27,7 +31,7 @@ export class GoalsPageComponent {
   protected readonly goalForm = this.formBuilder.group({
     name: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     target_amount: this.formBuilder.nonNullable.control(0, [Validators.required, Validators.min(1)]),
-    currency: this.formBuilder.nonNullable.control('ARS', [
+    currency: this.formBuilder.nonNullable.control(this.defaultCurrency(), [
       Validators.required,
       Validators.minLength(3),
       Validators.maxLength(3),
@@ -40,6 +44,12 @@ export class GoalsPageComponent {
   });
 
   constructor() {
+    effect(() => {
+      const currency = this.defaultCurrency();
+      if (this.editingGoalId === null && !this.goalForm.controls.currency.dirty) {
+        this.goalForm.patchValue({ currency }, { emitEvent: false });
+      }
+    });
     this.loadGoals();
   }
 
@@ -93,11 +103,7 @@ export class GoalsPageComponent {
   }
 
   protected formatCurrency(value: number, currency = 'ARS'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0,
-    }).format(value);
+    return this.displayFormat.formatCurrency(value, currency);
   }
 
   protected progressPercent(goal: Goal): number {
@@ -151,7 +157,7 @@ export class GoalsPageComponent {
     this.goalForm.reset({
       name: '',
       target_amount: 0,
-      currency: 'ARS',
+      currency: this.defaultCurrency(),
       target_date: this.todayString(),
       priority: 2,
       monthly_contribution_ideal: 0,
@@ -162,5 +168,9 @@ export class GoalsPageComponent {
 
   private todayString(): string {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private defaultCurrency(): string {
+    return this.userContext.baseCurrency() || 'ARS';
   }
 }

@@ -10,11 +10,11 @@ class UserBase(OrmModel):
 
 
 class UserCreate(UserBase):
-    pass
+    base_currency: str | None = Field(default=None, min_length=3, max_length=3)
 
 
 class UserUpdate(UserBase):
-    pass
+    base_currency: str | None = Field(default=None, min_length=3, max_length=3)
 
 
 class UserRead(UserBase):

@@ -4,6 +4,7 @@ import { Component, DestroyRef, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Scenario, ScenarioPayload } from '../../core/models/finance.models';
+import { DisplayFormatService } from '../../core/services/display-format.service';
 import { ScenarioService } from '../../core/services/scenario.service';
 
 @Component({
@@ -17,6 +18,7 @@ export class ScenariosPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly formBuilder = inject(FormBuilder);
   private readonly scenarioService = inject(ScenarioService);
+  private readonly displayFormat = inject(DisplayFormatService);
 
   protected scenarios: Scenario[] = [];
   protected selectedScenarioId: number | null = null;
@@ -79,11 +81,7 @@ export class ScenariosPageComponent {
   }
 
   protected formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0,
-    }).format(value);
+    return this.displayFormat.formatCurrency(value);
   }
 
   protected isSelected(id: number): boolean {

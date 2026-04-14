@@ -1,0 +1,192 @@
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Analytics</p>
+    <h1>See how the month behaves before it surprises you.</h1>
+    <p class="page-copy">
+      This section keeps the charts and month comparison in one place so you can quickly inspect cash flow, balance
+      trend, and how much stronger or tighter later months become.
+    </p>
+  </div>
+
+  <div class="header-actions">
+    <label class="field scenario-select">
+      <span>Scenario</span>
+      <select [value]="selectedScenarioId ?? ''" (change)="onScenarioChange($event)">
+        @for (scenario of scenarios; track scenario.id) {
+          <option [value]="scenario.id">{{ scenario.name }}</option>
+        }
+      </select>
+    </label>
+  </div>
+</section>
+
+@if (errorMessage) {
+  <section class="panel error-panel">{{ errorMessage }}</section>
+}
+
+@if (isLoading) {
+  <section class="panel loading-panel">Loading charts and monthly comparison...</section>
+} @else if (projection) {
+  <section class="panel analytics-intro">
+    <div>
+      <p class="eyebrow">Active scenario</p>
+      <h2>{{ selectedScenario?.name ?? projection.scenario.name }}</h2>
+      <p class="body-copy">{{ selectedScenario?.description }}</p>
+    </div>
+    <div class="badge-row">
+      <span class="badge">12-month view</span>
+      <span class="badge">Monthly comparison ready</span>
+      <span class="badge">{{ projection.goals.length }} goals tracked</span>
+    </div>
+  </section>
+
+  <section class="two-column">
+    <article class="panel chart-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Balance trend</p>
+          <h2>Liquid balance versus saved balance</h2>
+        </div>
+      </div>
+      <div class="chart-frame">
+        <canvas baseChart [data]="balanceChartData" [options]="lineChartOptions" [type]="'line'"></canvas>
+      </div>
+    </article>
+
+    <article class="panel chart-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Cash flow mix</p>
+          <h2>Income, expenses, and recommended savings</h2>
+        </div>
+      </div>
+      <div class="chart-frame">
+        <canvas baseChart [data]="cashFlowChartData" [options]="barChartOptions" [type]="'bar'"></canvas>
+      </div>
+    </article>
+  </section>
+
+  <section class="panel comparison-panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Month comparison</p>
+        <h2>Compare two projected months side by side</h2>
+        <p class="body-copy">{{ comparisonSummaryLabel }}</p>
+      </div>
+    </div>
+
+    <div class="comparison-controls">
+      <label class="field">
+        <span>Reference month</span>
+        <select [value]="primaryMonthKey ?? ''" (change)="onPrimaryMonthChange($event)">
+          @for (month of availableMonths; track month.month) {
+            <option [value]="month.month">{{ formatMonth(month.month) }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Comparison month</span>
+        <select [value]="comparisonMonthKey ?? ''" (change)="onComparisonMonthChange($event)">
+          @for (month of availableMonths; track month.month) {
+            <option [value]="month.month">{{ formatMonth(month.month) }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    @if (primaryMonth && comparisonMonth) {
+      <section class="metrics-grid comparison-metrics">
+        <app-metric-card
+          label="Closing balance delta"
+          [value]="deltaLabel(comparisonMetrics[4])"
+          hint="Difference between the two selected closing balances."
+          [tone]="metricTone(comparisonMetrics[4])"
+        />
+        <app-metric-card
+          label="Free spend delta"
+          [value]="deltaLabel(comparisonMetrics[3])"
+          hint="How much discretionary room changes between the two months."
+          [tone]="monthlyPressureTone"
+        />
+        <app-metric-card
+          label="Savings delta"
+          [value]="deltaLabel(comparisonMetrics[2])"
+          hint="Recommended savings movement between both months."
+          [tone]="metricTone(comparisonMetrics[2])"
+        />
+        <app-metric-card
+          label="Expense delta"
+          [value]="deltaLabel(comparisonMetrics[1])"
+          hint="Total expense change between the two months."
+          [tone]="metricTone(comparisonMetrics[1])"
+        />
+      </section>
+
+      <div class="comparison-columns">
+        <article class="info-callout month-snapshot">
+          <div class="snapshot-head">
+            <div>
+              <strong>{{ formatMonth(primaryMonth.month) }}</strong>
+              <small>{{ monthAlertLabel(primaryMonth) }}</small>
+            </div>
+            <span class="status-chip" [class.warning]="primaryMonth.alert_level === 'tight'" [class.danger]="primaryMonth.alert_level === 'deficit'">
+              {{ monthAlertLabel(primaryMonth) }}
+            </span>
+          </div>
+          <div class="snapshot-grid">
+            <span>Income <strong>{{ formatCurrency(primaryMonth.income_total) }}</strong></span>
+            <span>Expenses <strong>{{ formatCurrency(primaryMonth.total_expenses) }}</strong></span>
+            <span>Savings <strong>{{ formatCurrency(primaryMonth.recommended_savings) }}</strong></span>
+            <span>Free spend <strong>{{ formatCurrency(primaryMonth.free_spending_max) }}</strong></span>
+          </div>
+        </article>
+
+        <article class="info-callout month-snapshot">
+          <div class="snapshot-head">
+            <div>
+              <strong>{{ formatMonth(comparisonMonth.month) }}</strong>
+              <small>{{ monthAlertLabel(comparisonMonth) }}</small>
+            </div>
+            <span class="status-chip" [class.warning]="comparisonMonth.alert_level === 'tight'" [class.danger]="comparisonMonth.alert_level === 'deficit'">
+              {{ monthAlertLabel(comparisonMonth) }}
+            </span>
+          </div>
+          <div class="snapshot-grid">
+            <span>Income <strong>{{ formatCurrency(comparisonMonth.income_total) }}</strong></span>
+            <span>Expenses <strong>{{ formatCurrency(comparisonMonth.total_expenses) }}</strong></span>
+            <span>Savings <strong>{{ formatCurrency(comparisonMonth.recommended_savings) }}</strong></span>
+            <span>Free spend <strong>{{ formatCurrency(comparisonMonth.free_spending_max) }}</strong></span>
+          </div>
+        </article>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>{{ formatMonth(primaryMonth.month) }}</th>
+              <th>{{ formatMonth(comparisonMonth.month) }}</th>
+              <th>Delta</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (metric of comparisonMetrics; track metric.label) {
+              <tr>
+                <td>{{ metric.label }}</td>
+                <td>{{ formatCurrency(metric.leftValue) }}</td>
+                <td>{{ formatCurrency(metric.rightValue) }}</td>
+                <td>
+                  <span class="status-chip" [class.warning]="metricTone(metric) === 'warning'">
+                    {{ deltaLabel(metric) }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}

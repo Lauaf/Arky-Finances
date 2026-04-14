@@ -1,10 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, effect, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { Expense, ExpensePayload, ExpenseType, RecurrenceType } from '../../core/models/finance.models';
+import { DisplayFormatService } from '../../core/services/display-format.service';
 import { ExpenseService } from '../../core/services/expense.service';
+import { UserContextService } from '../../core/services/user-context.service';
+
+type ExpensePreset = 'rent' | 'groceries' | 'subscription' | 'repair';
 
 @Component({
   selector: 'app-expenses-page',
@@ -17,6 +21,8 @@ export class ExpensesPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly formBuilder = inject(FormBuilder);
   private readonly expenseService = inject(ExpenseService);
+  private readonly displayFormat = inject(DisplayFormatService);
+  private readonly userContext = inject(UserContextService);
 
   protected expenses: Expense[] = [];
   protected editingExpenseId: number | null = null;
@@ -28,7 +34,7 @@ export class ExpensesPageComponent {
     name: ['', [Validators.required, Validators.minLength(2)]],
     category: ['', [Validators.required, Validators.minLength(2)]],
     amount: [0, [Validators.required, Validators.min(1)]],
-    currency: ['ARS', [Validators.required, Validators.minLength(3), Validators.maxLength(3)]],
+    currency: [this.defaultCurrency(), [Validators.required, Validators.minLength(3), Validators.maxLength(3)]],
     expense_type: this.formBuilder.nonNullable.control<ExpenseType>('fixed', Validators.required),
     recurrence: this.formBuilder.nonNullable.control<RecurrenceType>('monthly', Validators.required),
     start_date: [this.todayString(), Validators.required],
@@ -36,7 +42,89 @@ export class ExpensesPageComponent {
   });
 
   constructor() {
+    effect(() => {
+      const currency = this.defaultCurrency();
+      if (this.editingExpenseId === null && !this.expenseForm.controls.currency.dirty) {
+        this.expenseForm.patchValue({ currency }, { emitEvent: false });
+      }
+    });
     this.loadExpenses();
+  }
+
+  protected applyPreset(preset: ExpensePreset): void {
+    const common = {
+      currency: this.defaultCurrency(),
+      start_date: this.monthOffsetString(0),
+    };
+
+    if (preset === 'rent') {
+      this.expenseForm.patchValue({
+        ...common,
+        name: 'Rent',
+        category: 'Housing',
+        expense_type: 'fixed',
+        recurrence: 'monthly',
+        notes: 'Recurring fixed housing cost.',
+      });
+      return;
+    }
+
+    if (preset === 'groceries') {
+      this.expenseForm.patchValue({
+        ...common,
+        name: 'Groceries',
+        category: 'Food',
+        expense_type: 'variable',
+        recurrence: 'monthly',
+        notes: 'Flexible monthly spending category.',
+      });
+      return;
+    }
+
+    if (preset === 'subscription') {
+      this.expenseForm.patchValue({
+        ...common,
+        name: 'Subscription',
+        category: 'Utilities',
+        expense_type: 'fixed',
+        recurrence: 'monthly',
+        notes: 'Streaming, software, gym, or other repeating charge.',
+      });
+      return;
+    }
+
+    this.expenseForm.patchValue({
+      ...common,
+      name: 'Repair',
+      category: 'Unexpected',
+      expense_type: 'variable',
+      recurrence: 'one_time',
+      notes: 'One-off hit such as a repair, medical bill, or replacement purchase.',
+    });
+  }
+
+  protected scheduleThisMonth(): void {
+    this.expenseForm.patchValue({
+      start_date: this.monthOffsetString(0),
+    });
+  }
+
+  protected scheduleNextMonth(): void {
+    this.expenseForm.patchValue({
+      start_date: this.monthOffsetString(1),
+    });
+  }
+
+  protected makeRecurring(): void {
+    this.expenseForm.patchValue({
+      recurrence: 'monthly',
+    });
+  }
+
+  protected makeOneTime(): void {
+    this.expenseForm.patchValue({
+      recurrence: 'one_time',
+    });
   }
 
   protected saveExpense(): void {
@@ -92,11 +180,7 @@ export class ExpensesPageComponent {
   }
 
   protected formatCurrency(value: number, currency = 'ARS'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0,
-    }).format(value);
+    return this.displayFormat.formatCurrency(value, currency);
   }
 
   protected expenseTypeLabel(type: ExpenseType): string {
@@ -142,7 +226,7 @@ export class ExpensesPageComponent {
       name: '',
       category: '',
       amount: 0,
-      currency: 'ARS',
+      currency: this.defaultCurrency(),
       expense_type: 'fixed',
       recurrence: 'monthly',
       start_date: this.todayString(),
@@ -152,5 +236,16 @@ export class ExpensesPageComponent {
 
   private todayString(): string {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private defaultCurrency(): string {
+    return this.userContext.baseCurrency() || 'ARS';
+  }
+
+  private monthOffsetString(offset: number): string {
+    const value = new Date();
+    value.setHours(12, 0, 0, 0);
+    value.setMonth(value.getMonth() + offset, 1);
+    return value.toISOString().slice(0, 10);
   }
 }

@@ -141,6 +141,11 @@ a {
   margin-bottom: 1rem;
 }
 
+.metrics-grid {
+  display: grid;
+  gap: 1rem;
+}
+
 .stack {
   display: grid;
   gap: 1rem;
@@ -383,6 +388,30 @@ th {
   font-weight: 700;
 }
 
+.planner-strip {
+  display: grid;
+  gap: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.planner-block {
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(245, 248, 248, 0.94), rgba(255, 255, 255, 0.88));
+  border: 1px solid rgba(19, 33, 44, 0.06);
+}
+
+.planner-chip-row {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.planner-chip {
+  padding: 0.7rem 0.95rem;
+  box-shadow: none;
+}
+
 .guide-list,
 .checklist {
   padding-left: 1rem;
@@ -482,5 +511,9 @@ th {
   .full-width,
   .button-row {
     grid-column: auto;
+  }
+
+  .planner-chip-row {
+    flex-direction: column;
   }
 }
