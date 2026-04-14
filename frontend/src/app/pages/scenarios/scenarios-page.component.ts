@@ -69,7 +69,7 @@ export class ScenariosPageComponent {
         },
         error: () => {
           this.isSaving = false;
-          this.errorMessage = 'No pude guardar el escenario.';
+          this.errorMessage = 'I could not save the scenario.';
         },
       });
   }
@@ -79,7 +79,7 @@ export class ScenariosPageComponent {
   }
 
   protected formatCurrency(value: number): string {
-    return new Intl.NumberFormat('es-AR', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'ARS',
       maximumFractionDigits: 0,
@@ -88,6 +88,10 @@ export class ScenariosPageComponent {
 
   protected isSelected(id: number): boolean {
     return this.selectedScenarioId === id;
+  }
+
+  protected scenarioKindLabel(scenario: Scenario): string {
+    return scenario.is_preset ? 'Preset' : 'Custom';
   }
 
   private loadScenarios(preferredId?: number): void {
@@ -112,7 +116,7 @@ export class ScenariosPageComponent {
         },
         error: () => {
           this.isLoading = false;
-          this.errorMessage = 'No pude cargar los escenarios.';
+          this.errorMessage = 'I could not load the scenarios.';
         },
       });
   }

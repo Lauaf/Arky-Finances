@@ -57,7 +57,7 @@ export class IncomesPageComponent {
       },
       error: () => {
         this.isSaving = false;
-        this.errorMessage = 'No pude guardar el ingreso.';
+        this.errorMessage = 'I could not save the income entry.';
       },
     });
   }
@@ -71,7 +71,7 @@ export class IncomesPageComponent {
   }
 
   protected deleteIncome(income: Income): void {
-    if (!window.confirm(`Eliminar ingreso "${income.name}"?`)) {
+    if (!window.confirm(`Delete income "${income.name}"?`)) {
       return;
     }
 
@@ -81,7 +81,7 @@ export class IncomesPageComponent {
       .subscribe({
         next: () => this.loadIncomes(),
         error: () => {
-          this.errorMessage = 'No pude eliminar el ingreso.';
+          this.errorMessage = 'I could not delete the income entry.';
         },
       });
   }
@@ -90,12 +90,20 @@ export class IncomesPageComponent {
     this.resetForm();
   }
 
-  protected formatCurrency(value: number): string {
-    return new Intl.NumberFormat('es-AR', {
+  protected formatCurrency(value: number, currency = 'ARS'): string {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'ARS',
+      currency,
       maximumFractionDigits: 0,
     }).format(value);
+  }
+
+  protected recurrenceLabel(recurrence: RecurrenceType): string {
+    return recurrence === 'monthly' ? 'Monthly' : 'One time';
+  }
+
+  protected salaryAdjustmentLabel(value: boolean): string {
+    return value ? 'Included' : 'Ignored';
   }
 
   private loadIncomes(): void {
@@ -112,7 +120,7 @@ export class IncomesPageComponent {
         },
         error: () => {
           this.isLoading = false;
-          this.errorMessage = 'No pude cargar los ingresos.';
+          this.errorMessage = 'I could not load income entries.';
         },
       });
   }

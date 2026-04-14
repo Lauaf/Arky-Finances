@@ -62,7 +62,7 @@ export class GoalsPageComponent {
       },
       error: () => {
         this.isSaving = false;
-        this.errorMessage = 'No pude guardar el objetivo.';
+        this.errorMessage = 'I could not save the goal.';
       },
     });
   }
@@ -73,7 +73,7 @@ export class GoalsPageComponent {
   }
 
   protected deleteGoal(goal: Goal): void {
-    if (!window.confirm(`Eliminar objetivo "${goal.name}"?`)) {
+    if (!window.confirm(`Delete goal "${goal.name}"?`)) {
       return;
     }
 
@@ -83,7 +83,7 @@ export class GoalsPageComponent {
       .subscribe({
         next: () => this.loadGoals(),
         error: () => {
-          this.errorMessage = 'No pude eliminar el objetivo.';
+          this.errorMessage = 'I could not delete the goal.';
         },
       });
   }
@@ -92,10 +92,10 @@ export class GoalsPageComponent {
     this.resetForm();
   }
 
-  protected formatCurrency(value: number): string {
-    return new Intl.NumberFormat('es-AR', {
+  protected formatCurrency(value: number, currency = 'ARS'): string {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'ARS',
+      currency,
       maximumFractionDigits: 0,
     }).format(value);
   }
@@ -105,6 +105,16 @@ export class GoalsPageComponent {
       return 0;
     }
     return Math.min(Math.round((goal.current_progress / goal.target_amount) * 100), 100);
+  }
+
+  protected priorityLabel(priority: number): string {
+    if (priority <= 1) {
+      return 'High';
+    }
+    if (priority >= 4) {
+      return 'Low';
+    }
+    return 'Medium';
   }
 
   private loadGoals(): void {
@@ -121,7 +131,7 @@ export class GoalsPageComponent {
         },
         error: () => {
           this.isLoading = false;
-          this.errorMessage = 'No pude cargar los objetivos.';
+          this.errorMessage = 'I could not load the goals.';
         },
       });
   }

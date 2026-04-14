@@ -1,8 +1,11 @@
 <section class="page-header">
   <div>
-    <p class="eyebrow">Gastos</p>
-    <h1>Gastos fijos y variables</h1>
-    <p class="page-copy">Separá compromisos recurrentes del gasto flexible para estimar mejor tu ahorro disponible.</p>
+    <p class="eyebrow">Expense setup</p>
+    <h1>Separate the rigid costs from the choices you can still shape.</h1>
+    <p class="page-copy">
+      Clean expense categories make the dashboard more honest. The planner works best when fixed and variable costs are
+      clearly separated.
+    </p>
   </div>
 </section>
 
@@ -10,68 +13,105 @@
   <section class="panel error-panel">{{ errorMessage }}</section>
 }
 
+<section class="panel">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">How to fill this section</p>
+      <h2>Use the labels the planner needs, not the labels a bank statement gives you.</h2>
+    </div>
+  </div>
+
+  <div class="guide-grid">
+    <article class="guide-card">
+      <span class="guide-label">Fixed costs</span>
+      <h3>Use this for rent, insurance, subscriptions, and debt payments.</h3>
+      <p class="body-copy">If the amount is difficult to avoid month to month, it belongs in fixed expenses.</p>
+    </article>
+
+    <article class="guide-card">
+      <span class="guide-label">Variable costs</span>
+      <h3>Use this for groceries, fuel, takeout, leisure, and shopping.</h3>
+      <p class="body-copy">This is the part of the plan you can usually adjust when the month gets tight.</p>
+    </article>
+
+    <article class="guide-card">
+      <span class="guide-label">One-off hits</span>
+      <h3>Use one-time expenses for exceptions.</h3>
+      <p class="body-copy">Medical bills, repairs, or one-off purchases should not repeat through every future month.</p>
+    </article>
+  </div>
+</section>
+
 <section class="two-column">
   <article class="panel">
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">Formulario</p>
-        <h2>{{ editingExpenseId ? 'Editar gasto' : 'Nuevo gasto' }}</h2>
+        <p class="eyebrow">Expense form</p>
+        <h2>{{ editingExpenseId ? 'Edit expense entry' : 'Add expense entry' }}</h2>
       </div>
     </div>
 
     <form class="form-grid" [formGroup]="expenseForm" (ngSubmit)="saveExpense()">
       <label class="field">
-        <span>Nombre</span>
+        <span>Name</span>
         <input type="text" formControlName="name" />
+        <small>Examples: Rent, Groceries, Gym membership, Car repair.</small>
       </label>
 
       <label class="field">
-        <span>Categoría</span>
+        <span>Category</span>
         <input type="text" formControlName="category" />
+        <small>Use broad groups like Housing, Food, Health, or Transport.</small>
       </label>
 
       <label class="field">
-        <span>Monto</span>
+        <span>Amount</span>
         <input type="number" formControlName="amount" />
+        <small>Use the amount you expect to actually pay.</small>
       </label>
 
       <label class="field">
-        <span>Moneda</span>
+        <span>Currency</span>
         <input type="text" maxlength="3" formControlName="currency" />
+        <small>ISO codes only, such as ARS or USD.</small>
       </label>
 
       <label class="field">
-        <span>Tipo</span>
+        <span>Type</span>
         <select formControlName="expense_type">
-          <option value="fixed">Fijo</option>
+          <option value="fixed">Fixed</option>
           <option value="variable">Variable</option>
         </select>
+        <small>Choose fixed if the cost is hard to avoid in the month.</small>
       </label>
 
       <label class="field">
-        <span>Recurrencia</span>
+        <span>Recurrence</span>
         <select formControlName="recurrence">
-          <option value="monthly">Mensual</option>
-          <option value="one_time">Puntual</option>
+          <option value="monthly">Monthly</option>
+          <option value="one_time">One time</option>
         </select>
+        <small>One-time expenses affect only the month you choose.</small>
       </label>
 
       <label class="field">
-        <span>Fecha o mes</span>
+        <span>Date or month</span>
         <input type="date" formControlName="start_date" />
+        <small>Use the month in which the payment starts to matter.</small>
       </label>
 
       <label class="field full-width">
-        <span>Notas</span>
+        <span>Notes</span>
         <textarea rows="4" formControlName="notes"></textarea>
+        <small>Optional detail such as payment method, seasonality, or expected changes.</small>
       </label>
 
       <div class="button-row">
         <button type="submit" class="primary-button" [disabled]="expenseForm.invalid || isSaving">
-          {{ isSaving ? 'Guardando...' : editingExpenseId ? 'Actualizar gasto' : 'Crear gasto' }}
+          {{ isSaving ? 'Saving...' : editingExpenseId ? 'Update expense' : 'Create expense' }}
         </button>
         @if (editingExpenseId) {
-          <button type="button" class="secondary-button" (click)="cancelEdit()">Cancelar</button>
+          <button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button>
         }
       </div>
     </form>
@@ -80,23 +120,33 @@
   <article class="panel">
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">Listado</p>
-        <h2>Gastos cargados</h2>
+        <p class="eyebrow">Expense list</p>
+        <h2>Current cost structure</h2>
       </div>
     </div>
 
     @if (isLoading) {
-      <p class="body-copy">Cargando gastos...</p>
+      <p class="body-copy">Loading expense entries...</p>
+    } @else if (!expenses.length) {
+      <div class="empty-state">
+        <div>
+          <h3>No expenses yet.</h3>
+          <p class="body-copy">
+            Add your fixed costs first. They define the minimum pressure of the month and make the free spending
+            recommendation much more useful.
+          </p>
+        </div>
+      </div>
     } @else {
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th>Nombre</th>
-              <th>Categoría</th>
-              <th>Monto</th>
-              <th>Tipo</th>
-              <th>Recurrencia</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Type</th>
+              <th>Recurrence</th>
               <th></th>
             </tr>
           </thead>
@@ -110,12 +160,12 @@
                   }
                 </td>
                 <td>{{ expense.category }}</td>
-                <td>{{ formatCurrency(expense.amount) }}</td>
-                <td>{{ expense.expense_type === 'fixed' ? 'Fijo' : 'Variable' }}</td>
-                <td>{{ expense.recurrence === 'monthly' ? 'Mensual' : 'Puntual' }}</td>
+                <td>{{ formatCurrency(expense.amount, expense.currency) }}</td>
+                <td>{{ expenseTypeLabel(expense.expense_type) }}</td>
+                <td>{{ recurrenceLabel(expense.recurrence) }}</td>
                 <td class="table-actions">
-                  <button type="button" class="secondary-button" (click)="editExpense(expense)">Editar</button>
-                  <button type="button" class="danger-button" (click)="deleteExpense(expense)">Eliminar</button>
+                  <button type="button" class="secondary-button" (click)="editExpense(expense)">Edit</button>
+                  <button type="button" class="danger-button" (click)="deleteExpense(expense)">Delete</button>
                 </td>
               </tr>
             }

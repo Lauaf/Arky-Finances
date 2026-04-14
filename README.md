@@ -1,192 +1,188 @@
 # Arky Finances
 
-MVP de planificación financiera personal orientado a flujo mensual, metas de ahorro y simulación de escenarios.
+Arky Finances is a local-first personal finance planner focused on monthly cash flow, savings goals, and simple scenario testing. It is built to replace spreadsheet-based planning with a cleaner workflow that answers three practical questions:
+
+- How much can I safely spend this month?
+- How much should I save this month?
+- When do I reach each goal?
 
 ## Stack
 
 - Frontend: Angular 20
 - Backend: FastAPI + Pydantic + SQLAlchemy
-- Base local: SQLite
-- Producción en Vercel: FastAPI serverless, con soporte para `DATABASE_URL` o fallback a SQLite temporal
-- Comunicación: REST
+- Local database: SQLite
+- Production on Vercel: FastAPI serverless with `DATABASE_URL` support and a temporary SQLite fallback when no external database is configured
+- Communication: REST
 
-## Estructura del repo
+## Repository structure
 
 ```text
 .
-├─ backend/
-│  ├─ app/
-│  │  ├─ core/
-│  │  ├─ models/
-│  │  ├─ routers/
-│  │  ├─ schemas/
-│  │  ├─ services/
-│  │  ├─ index.py
-│  │  ├─ init_db.py
-│  │  └─ main.py
-│  ├─ data/
-│  ├─ .env.example
-│  ├─ pyproject.toml
-│  └─ requirements.txt
-├─ frontend/
-│  ├─ src/
-│  │  ├─ app/
-│  │  └─ environments/
-│  ├─ .env.example
-│  ├─ angular.json
-│  ├─ package.json
-│  └─ vercel.mjs
-├─ scripts/
-│  ├─ init-db.ps1
-│  ├─ start-backend.ps1
-│  └─ start-frontend.ps1
-└─ README.md
+|-- backend/
+|   |-- app/
+|   |   |-- core/
+|   |   |-- models/
+|   |   |-- routers/
+|   |   |-- schemas/
+|   |   |-- services/
+|   |   |-- index.py
+|   |   |-- init_db.py
+|   |   `-- main.py
+|   |-- data/
+|   |-- .env.example
+|   |-- pyproject.toml
+|   `-- requirements.txt
+|-- frontend/
+|   |-- src/
+|   |   |-- app/
+|   |   `-- environments/
+|   |-- .env.example
+|   |-- angular.json
+|   |-- package.json
+|   `-- vercel.mjs
+|-- scripts/
+|   |-- init-db.ps1
+|   |-- start-backend.ps1
+|   `-- start-frontend.ps1
+`-- README.md
 ```
 
-## Qué implementa este MVP
+## What the MVP includes
 
-- CRUD completo de ingresos
-- CRUD completo de gastos
-- CRUD completo de objetivos
-- Dashboard con métricas principales y alerta visual
-- Escenarios `conservador`, `base` y `optimista`
-- Motor de proyección determinístico a 12 meses
-- Recomendador mensual simple
-- Gráficos de saldo, ahorro, objetivos y comparación entre escenarios
-- Persistencia local en SQLite para desarrollo
-- Seed de datos de ejemplo
+- Full CRUD for income entries
+- Full CRUD for expense entries
+- Full CRUD for financial goals
+- A dashboard with key monthly metrics and alert states
+- Conservative, base, and optimistic planning scenarios
+- A deterministic 12-month projection engine
+- A simple monthly recommendation engine
+- Charts for projected balance, savings, goal progress, and scenario comparison
+- Local SQLite persistence for development
+- A guided in-app tutorial and empty-state hints in English
+- A clean default setup with no sample income, expense, or goal data
 
-## Nota importante sobre Vercel
+## Important note about local data
 
-La app original fue diseñada como herramienta local con SQLite. Eso sigue funcionando en desarrollo.
+The app no longer seeds example income, expense, or goal rows.
 
-Para Vercel, el repo quedó preparado así:
+It only creates:
 
-- local: SQLite en `backend/data/arky_finances.db`
-- Vercel: usar `DATABASE_URL` o `POSTGRES_URL` cuando quieras persistencia real
-- Vercel sin variables de base: fallback a SQLite temporal en `/tmp/arky-finances/arky_finances.db`
+- one empty financial profile
+- three default scenarios: `Conservative`, `Base`, and `Optimistic`
 
-Opciones razonables para producción:
+If you already ran an older version with demo data, delete `backend/data/arky_finances.db` once and run the database initialization script again.
 
-- Vercel Postgres
-- Neon
-- Supabase Postgres
-- Turso con adaptación adicional si quisieras seguir en SQLite remoto
+## Running locally
 
-## Cómo correrlo localmente
+### Recommended PowerShell flow
 
-### Opción recomendada en PowerShell
-
-1. Inicializar base de datos y seed:
+1. Initialize the database:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\init-db.ps1
 ```
 
-2. Levantar backend:
+2. Start the backend:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\start-backend.ps1
 ```
 
-3. Levantar frontend:
+3. Start the frontend:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\start-frontend.ps1
 ```
 
-4. Abrir:
+4. Open:
 
 - Frontend: [http://127.0.0.1:4200](http://127.0.0.1:4200)
 - Backend docs: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
-## Despliegue en Vercel
+## Vercel deployment
 
-La preparación quedó pensada como dos proyectos Vercel dentro del mismo monorepo:
+The repository is prepared as two separate Vercel projects inside the same monorepo:
 
 1. `backend`
 2. `frontend`
 
-### 1. Deploy del backend
+### Backend project
 
-Crear un proyecto en Vercel con:
+Create a Vercel project with:
 
 - Root Directory: `backend`
 - Framework preset: `Other`
 
-Variables de entorno mínimas:
+Environment variables:
 
-- ninguna obligatoria para que levante
-- `DATABASE_URL` o `POSTGRES_URL` recomendadas para persistencia real
+- Optional for startup: none
+- Recommended for real persistence: `DATABASE_URL` or `POSTGRES_URL`
+- Optional CORS override: `CORS_ORIGINS`
 
-Opcionales:
-
-- `CORS_ORIGINS`
-
-Ejemplo:
+Example:
 
 ```text
 DATABASE_URL=postgresql+psycopg://USER:PASSWORD@HOST:5432/DBNAME
 ```
 
-El backend para Vercel usa el entrypoint [backend/app/index.py](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/app/index.py) y el script `app = "app.main:app"` en [backend/pyproject.toml](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/pyproject.toml), siguiendo el despliegue estándar de FastAPI en Vercel.
+The backend entrypoint for Vercel is [backend/app/index.py](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/app/index.py).
 
-### 2. Deploy del frontend
+### Frontend project
 
-Crear otro proyecto en Vercel con:
+Create another Vercel project with:
 
 - Root Directory: `frontend`
 - Framework preset: `Angular`
 
-Variable de entorno necesaria:
-
-- `ARKY_BACKEND_URL`
-
-Ejemplo:
+Required environment variable:
 
 ```text
-ARKY_BACKEND_URL=https://tu-backend.vercel.app
+ARKY_BACKEND_URL=https://your-backend.vercel.app
 ```
 
-El frontend quedó preparado para:
+The frontend uses:
 
-- local: usar `http://127.0.0.1:8000/api`
-- Vercel: usar `/api` y hacer proxy al backend definido en [frontend/vercel.mjs](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/frontend/vercel.mjs)
+- local development: `http://127.0.0.1:8000/api`
+- Vercel: `/api`, proxied to the backend through [frontend/vercel.mjs](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/frontend/vercel.mjs)
 
-## Configuración de entorno
+## Environment examples
 
-- Backend ejemplo: [backend/.env.example](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/.env.example)
-- Frontend ejemplo: [frontend/.env.example](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/frontend/.env.example)
+- Backend: [backend/.env.example](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/.env.example)
+- Frontend: [frontend/.env.example](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/frontend/.env.example)
 
-## Endpoints principales
+## Main endpoints
 
+- `GET /`
 - `GET /health`
 - `GET/POST/PUT/DELETE /api/incomes`
 - `GET/POST/PUT/DELETE /api/expenses`
 - `GET/POST/PUT/DELETE /api/goals`
 - `GET/PUT /api/profile`
-- `GET/POST/PUT/DELETE /api/scenarios`
+- `GET/PUT /api/scenarios/{id}`
 - `GET /api/insights/dashboard`
 - `GET /api/insights/projection?months=12`
 - `GET /api/insights/recommendation`
 
-## Verificación realizada
+## Verification
 
-- backend compilado y endpoints principales probados con `TestClient`
-- frontend compilado con `npm run build`
-- backend local respondió `/health`
-- frontend local respondió `200` en `http://127.0.0.1:4200`
+The current project has been validated with:
 
-## Limitación del fallback serverless
+- backend import and API smoke checks
+- frontend production build
+- local dashboard flow with clean seeded scenarios and no demo records
 
-Si usás el backend en Vercel sin `DATABASE_URL`, la app levanta usando SQLite temporal. Eso resuelve el deploy, pero los datos pueden perderse entre cold starts, reinicios o nuevos despliegues. Para uso real y persistente, seguí usando una base externa.
+## Serverless fallback limitation
 
-## Fuera de alcance del MVP
+If you run the backend on Vercel without `DATABASE_URL`, the app uses temporary SQLite storage. That is enough for deployment and short demos, but the data can disappear between cold starts, restarts, or redeployments.
 
-- autenticación
-- conexión bancaria
-- importación CSV
+For persistent use, connect an external database.
+
+## Out of scope
+
+- authentication
+- bank connections
+- CSV import
 - OCR
-- IA generativa
-- sincronización cloud
-- multiusuario
+- generative AI
+- cloud sync
+- multi-user support

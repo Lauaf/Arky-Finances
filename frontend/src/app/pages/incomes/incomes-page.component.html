@@ -1,8 +1,11 @@
 <section class="page-header">
   <div>
-    <p class="eyebrow">Ingresos</p>
-    <h1>Ingresos recurrentes y extraordinarios</h1>
-    <p class="page-copy">Definí sueldo, freelance u otros ingresos puntuales para alimentar la proyección mensual.</p>
+    <p class="eyebrow">Income setup</p>
+    <h1>Capture the inflows that truly fund the month.</h1>
+    <p class="page-copy">
+      Start with the income you trust most, then layer in bonuses or side work. Cleaner income inputs make the
+      recommendations more believable.
+    </p>
   </div>
 </section>
 
@@ -10,60 +13,95 @@
   <section class="panel error-panel">{{ errorMessage }}</section>
 }
 
+<section class="panel">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">How to fill this section</p>
+      <h2>Enter income the same way it arrives in real life.</h2>
+    </div>
+  </div>
+
+  <div class="guide-grid">
+    <article class="guide-card">
+      <span class="guide-label">Monthly salary</span>
+      <h3>Use recurring income for paychecks.</h3>
+      <p class="body-copy">Keep salary adjustment enabled if you want scenario salary bumps to affect this line item.</p>
+    </article>
+
+    <article class="guide-card">
+      <span class="guide-label">Side work</span>
+      <h3>Separate freelance or consulting work.</h3>
+      <p class="body-copy">Add regular freelance income as monthly only if it is dependable enough to plan around.</p>
+    </article>
+
+    <article class="guide-card">
+      <span class="guide-label">One-time cash</span>
+      <h3>Bonuses should stay one time.</h3>
+      <p class="body-copy">Use the actual month you expect the payment so the projection does not overestimate future cash flow.</p>
+    </article>
+  </div>
+</section>
+
 <section class="two-column">
   <article class="panel">
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">Formulario</p>
-        <h2>{{ editingIncomeId ? 'Editar ingreso' : 'Nuevo ingreso' }}</h2>
+        <p class="eyebrow">Income form</p>
+        <h2>{{ editingIncomeId ? 'Edit income entry' : 'Add income entry' }}</h2>
       </div>
     </div>
 
     <form class="form-grid" [formGroup]="incomeForm" (ngSubmit)="saveIncome()">
       <label class="field">
-        <span>Nombre</span>
+        <span>Name</span>
         <input type="text" formControlName="name" />
+        <small>Examples: Main salary, Freelance retainer, Year-end bonus.</small>
       </label>
 
       <label class="field">
-        <span>Monto</span>
+        <span>Amount</span>
         <input type="number" formControlName="amount" />
+        <small>Use the expected amount before deciding how to spend it.</small>
       </label>
 
       <label class="field">
-        <span>Moneda</span>
+        <span>Currency</span>
         <input type="text" maxlength="3" formControlName="currency" />
+        <small>Use ISO codes such as ARS or USD.</small>
       </label>
 
       <label class="field">
-        <span>Fecha o mes</span>
+        <span>Date or month</span>
         <input type="date" formControlName="start_date" />
+        <small>The planner uses the month portion for the forecast.</small>
       </label>
 
       <label class="field">
-        <span>Recurrencia</span>
+        <span>Recurrence</span>
         <select formControlName="recurrence">
-          <option value="monthly">Mensual</option>
-          <option value="one_time">Extraordinario</option>
+          <option value="monthly">Monthly</option>
+          <option value="one_time">One time</option>
         </select>
+        <small>Use monthly only for income that reliably repeats.</small>
       </label>
 
       <label class="checkbox-field">
         <input type="checkbox" formControlName="is_salary_adjusted" />
-        <span>Aplica ajustes salariales del escenario</span>
+        <span>Let scenario salary adjustments affect this income</span>
       </label>
 
       <label class="field full-width">
-        <span>Notas</span>
+        <span>Notes</span>
         <textarea rows="4" formControlName="notes"></textarea>
+        <small>Optional context such as payment timing or uncertainty.</small>
       </label>
 
       <div class="button-row">
         <button type="submit" class="primary-button" [disabled]="incomeForm.invalid || isSaving">
-          {{ isSaving ? 'Guardando...' : editingIncomeId ? 'Actualizar ingreso' : 'Crear ingreso' }}
+          {{ isSaving ? 'Saving...' : editingIncomeId ? 'Update income' : 'Create income' }}
         </button>
         @if (editingIncomeId) {
-          <button type="button" class="secondary-button" (click)="cancelEdit()">Cancelar</button>
+          <button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button>
         }
       </div>
     </form>
@@ -72,23 +110,33 @@
   <article class="panel">
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">Listado</p>
-        <h2>Ingresos cargados</h2>
+        <p class="eyebrow">Income list</p>
+        <h2>Current inflows</h2>
       </div>
     </div>
 
     @if (isLoading) {
-      <p class="body-copy">Cargando ingresos...</p>
+      <p class="body-copy">Loading income entries...</p>
+    } @else if (!incomes.length) {
+      <div class="empty-state">
+        <div>
+          <h3>No income entries yet.</h3>
+          <p class="body-copy">
+            Start with the most predictable monthly income first. Without it, the dashboard cannot estimate how much you
+            can safely save or spend.
+          </p>
+        </div>
+      </div>
     } @else {
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
-              <th>Nombre</th>
-              <th>Monto</th>
-              <th>Fecha</th>
-              <th>Recurrencia</th>
-              <th>Ajuste</th>
+              <th>Name</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Recurrence</th>
+              <th>Scenario salary rule</th>
               <th></th>
             </tr>
           </thead>
@@ -101,13 +149,13 @@
                     <small class="row-note">{{ income.notes }}</small>
                   }
                 </td>
-                <td>{{ formatCurrency(income.amount) }}</td>
+                <td>{{ formatCurrency(income.amount, income.currency) }}</td>
                 <td>{{ income.start_date }}</td>
-                <td>{{ income.recurrence === 'monthly' ? 'Mensual' : 'Extraordinario' }}</td>
-                <td>{{ income.is_salary_adjusted ? 'Sí' : 'No' }}</td>
+                <td>{{ recurrenceLabel(income.recurrence) }}</td>
+                <td>{{ salaryAdjustmentLabel(income.is_salary_adjusted) }}</td>
                 <td class="table-actions">
-                  <button type="button" class="secondary-button" (click)="editIncome(income)">Editar</button>
-                  <button type="button" class="danger-button" (click)="deleteIncome(income)">Eliminar</button>
+                  <button type="button" class="secondary-button" (click)="editIncome(income)">Edit</button>
+                  <button type="button" class="danger-button" (click)="deleteIncome(income)">Delete</button>
                 </td>
               </tr>
             }

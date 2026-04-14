@@ -171,10 +171,10 @@ def classify_alert(
 
 def alert_message_for_level(level: str) -> str:
     if level == "deficit":
-        return "El flujo proyectado del mes entra en déficit y requiere recortar gastos o metas."
+        return "This month falls into deficit and needs either lower spending or lower savings commitments."
     if level == "tight":
-        return "El margen del mes es chico frente al buffer definido; cualquier desvío puede tensionar el plan."
-    return "El mes proyectado mantiene margen positivo después de gastos y ahorro sugerido."
+        return "The plan stays barely above your buffer, so a small deviation could put the month under pressure."
+    return "The month keeps a positive margin after expenses and the recommended savings transfer."
 
 
 def build_projection(
@@ -279,7 +279,8 @@ def build_projection(
                 target_amount=projected_goal_target(goal, profile, scenario, month_index),
                 percent_complete=round_money(
                     min(
-                        (progress_map[goal.id] / max(projected_goal_target(goal, profile, scenario, month_index), 1.0)) * 100,
+                        (progress_map[goal.id] / max(projected_goal_target(goal, profile, scenario, month_index), 1.0))
+                        * 100,
                         100.0,
                     )
                 ),
@@ -387,14 +388,14 @@ def build_recommendation(
     first_month = projection.months[0]
     plan_sustainable = first_month.recommended_savings >= first_month.ideal_savings_target or first_month.ideal_savings_target == 0
     explanation = (
-        f"Ingresos estimados {first_month.income_total:.2f} menos gastos {first_month.total_expenses:.2f} "
-        f"dejan {first_month.available_after_expenses:.2f}. "
-        f"Las metas y la tasa objetivo piden ahorrar {first_month.ideal_savings_target:.2f}; "
-        f"con el flujo actual conviene separar {first_month.recommended_savings:.2f} y dejar "
-        f"{first_month.free_spending_max:.2f} como gasto libre máximo."
+        f"Estimated income of {first_month.income_total:.2f} minus expenses of {first_month.total_expenses:.2f} "
+        f"leaves {first_month.available_after_expenses:.2f}. "
+        f"Your goals and target savings rate ask for {first_month.ideal_savings_target:.2f}; "
+        f"with the current setup, the recommended move is to save {first_month.recommended_savings:.2f} "
+        f"and cap flexible spending at {first_month.free_spending_max:.2f}."
     )
     if not plan_sustainable:
-        explanation += " El objetivo ideal de ahorro no entra completo en el mes actual."
+        explanation += " The ideal savings target does not fully fit inside the current month."
 
     return RecommendationResponse(
         scenario=projection.scenario,

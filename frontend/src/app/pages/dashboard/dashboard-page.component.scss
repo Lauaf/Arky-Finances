@@ -1,38 +1,115 @@
+.hero-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  padding: 1.5rem;
+  border-radius: 36px;
+  background:
+    radial-gradient(circle at top right, rgba(199, 138, 44, 0.16), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(239, 244, 242, 0.86));
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-strong);
+}
+
+.hero-copy {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.hero-copy h2 {
+  max-width: 22ch;
+}
+
+.hero-summary {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.hero-summary-card {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1.15rem;
+  border-radius: 24px;
+  background: rgba(19, 33, 44, 0.06);
+  border: 1px solid rgba(19, 33, 44, 0.07);
+}
+
+.hero-summary-card.accent {
+  background: linear-gradient(180deg, rgba(27, 127, 115, 0.1), rgba(255, 255, 255, 0.82));
+}
+
+.hero-summary-card p,
+.hero-summary-card small {
+  color: var(--muted);
+}
+
+.hero-summary-card strong {
+  font-size: 1.75rem;
+  letter-spacing: -0.03em;
+}
+
+.scenario-select {
+  min-width: min(100%, 300px);
+}
+
+.tutorial-panel,
+.tutorial-toggle {
+  margin-bottom: 1rem;
+}
+
+.setup-card {
+  min-height: 220px;
+}
+
+.setup-card.done {
+  background: linear-gradient(180deg, rgba(230, 247, 242, 0.92), rgba(255, 255, 255, 0.95));
+  border-color: rgba(27, 127, 115, 0.14);
+}
+
+.starter-state {
+  background:
+    radial-gradient(circle at top right, rgba(27, 127, 115, 0.14), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(246, 248, 249, 0.88));
+}
+
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .alert-banner {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.25rem;
-  padding: 1.2rem 1.3rem;
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(216, 255, 241, 0.88), rgba(255, 255, 255, 0.94));
-  border: 1px solid rgba(0, 106, 113, 0.12);
+  margin-bottom: 1rem;
+  padding: 1.25rem 1.35rem;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(224, 247, 239, 0.96), rgba(255, 255, 255, 0.94));
+  border: 1px solid rgba(27, 127, 115, 0.15);
 }
 
 .alert-banner.tight {
-  background: linear-gradient(135deg, rgba(255, 242, 214, 0.92), rgba(255, 255, 255, 0.95));
+  background: linear-gradient(135deg, rgba(255, 245, 229, 0.95), rgba(255, 255, 255, 0.94));
+  border-color: rgba(183, 121, 31, 0.16);
 }
 
 .alert-banner.deficit {
-  background: linear-gradient(135deg, rgba(255, 226, 221, 0.96), rgba(255, 255, 255, 0.97));
+  background: linear-gradient(135deg, rgba(255, 235, 231, 0.95), rgba(255, 255, 255, 0.94));
+  border-color: rgba(177, 68, 42, 0.16);
 }
 
 .alert-banner h2 {
-  margin: 0.35rem 0 0;
+  margin-bottom: 0.4rem;
 }
 
 .alert-metrics {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  color: var(--text-muted);
+  display: grid;
+  gap: 0.45rem;
+  color: var(--muted);
+  text-align: right;
 }
 
 .recommendation-grid {
@@ -50,30 +127,32 @@
 }
 
 .chart-panel {
-  min-height: 360px;
+  min-height: 380px;
 }
 
 .chart-frame {
   position: relative;
-  height: 290px;
+  height: 300px;
 }
 
 .scenario-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
-  color: var(--text-muted);
+  gap: 0.75rem;
+  margin: 1rem 0;
+  color: var(--muted);
 }
 
 .goal-list {
   display: grid;
-  gap: 0.85rem;
+  gap: 0.9rem;
 }
 
 .goal-card {
   padding: 1rem;
-  border-radius: 18px;
-  background: rgba(244, 248, 250, 0.92);
+  border-radius: 22px;
+  background: rgba(247, 249, 250, 0.85);
+  border: 1px solid rgba(19, 33, 44, 0.06);
 }
 
 .goal-head,
@@ -86,14 +165,14 @@
 
 .goal-head small,
 .goal-meta {
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .goal-bar {
   height: 12px;
-  margin: 0.75rem 0;
+  margin: 0.8rem 0;
   border-radius: 999px;
-  background: rgba(12, 28, 38, 0.08);
+  background: rgba(19, 33, 44, 0.08);
   overflow: hidden;
 }
 
@@ -101,37 +180,17 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent-strong), var(--accent));
+  background: linear-gradient(90deg, var(--accent-strong), #3fa997);
 }
 
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(0, 106, 113, 0.1);
-  color: var(--accent-strong);
-  font-size: 0.8rem;
-  text-transform: capitalize;
-}
-
-.loading-panel,
-.error-panel {
-  margin-bottom: 1rem;
-}
-
-.error-panel {
-  color: #942b0d;
-  background: rgba(255, 226, 221, 0.96);
-}
-
-@media (max-width: 1440px) {
+@media (max-width: 1480px) {
   .metrics-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1120px) {
+  .hero-panel,
   .charts-grid,
   .recommendation-grid {
     grid-template-columns: 1fr;
@@ -143,9 +202,13 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .alert-metrics {
+    text-align: left;
+  }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
   .metrics-grid,
   .scenario-stats {
     grid-template-columns: 1fr;

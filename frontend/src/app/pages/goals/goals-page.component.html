@@ -1,8 +1,11 @@
 <section class="page-header">
   <div>
-    <p class="eyebrow">Objetivos</p>
-    <h1>Metas de ahorro y compras grandes</h1>
-    <p class="page-copy">Priorizá objetivos, definí aportes ideales y seguí el progreso actual de cada meta.</p>
+    <p class="eyebrow">Goal setup</p>
+    <h1>Turn wishes into dated savings targets.</h1>
+    <p class="page-copy">
+      Each goal should describe a real outcome, a real deadline, and a realistic monthly contribution. That is what
+      makes the forecast useful.
+    </p>
   </div>
 </section>
 
@@ -10,62 +13,99 @@
   <section class="panel error-panel">{{ errorMessage }}</section>
 }
 
+<section class="panel">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">How to fill this section</p>
+      <h2>Keep goals concrete enough that the planner can defend the recommendation.</h2>
+    </div>
+  </div>
+
+  <div class="guide-grid">
+    <article class="guide-card">
+      <span class="guide-label">One goal, one outcome</span>
+      <h3>Do not bundle everything into one big savings bucket.</h3>
+      <p class="body-copy">Separate your emergency fund, travel plan, and major purchases so priorities stay visible.</p>
+    </article>
+
+    <article class="guide-card">
+      <span class="guide-label">Priority</span>
+      <h3>Lower numbers should matter more.</h3>
+      <p class="body-copy">Use priority 1 for goals that deserve money first when the month becomes tight.</p>
+    </article>
+
+    <article class="guide-card">
+      <span class="guide-label">Ideal contribution</span>
+      <h3>Think of this as the pace you want, not a promise.</h3>
+      <p class="body-copy">The recommender uses it as guidance, then checks if the month can actually support it.</p>
+    </article>
+  </div>
+</section>
+
 <section class="two-column">
   <article class="panel">
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">Formulario</p>
-        <h2>{{ editingGoalId ? 'Editar objetivo' : 'Nuevo objetivo' }}</h2>
+        <p class="eyebrow">Goal form</p>
+        <h2>{{ editingGoalId ? 'Edit goal' : 'Create goal' }}</h2>
       </div>
     </div>
 
     <form class="form-grid" [formGroup]="goalForm" (ngSubmit)="saveGoal()">
       <label class="field">
-        <span>Nombre</span>
+        <span>Name</span>
         <input type="text" formControlName="name" />
+        <small>Examples: Emergency fund, Japan trip, New laptop.</small>
       </label>
 
       <label class="field">
-        <span>Monto objetivo</span>
+        <span>Target amount</span>
         <input type="number" formControlName="target_amount" />
+        <small>The full amount you need to reach the goal.</small>
       </label>
 
       <label class="field">
-        <span>Moneda</span>
+        <span>Currency</span>
         <input type="text" maxlength="3" formControlName="currency" />
+        <small>Use ISO codes such as ARS or USD.</small>
       </label>
 
       <label class="field">
-        <span>Fecha objetivo</span>
+        <span>Target date</span>
         <input type="date" formControlName="target_date" />
+        <small>The planner uses this to estimate required pace.</small>
       </label>
 
       <label class="field">
-        <span>Prioridad</span>
+        <span>Priority</span>
         <input type="number" min="1" max="5" formControlName="priority" />
+        <small>1 is highest priority. 5 is lowest.</small>
       </label>
 
       <label class="field">
-        <span>Aporte mensual ideal</span>
+        <span>Ideal monthly contribution</span>
         <input type="number" formControlName="monthly_contribution_ideal" />
+        <small>The monthly pace you would like to sustain.</small>
       </label>
 
       <label class="field">
-        <span>Progreso actual</span>
+        <span>Current progress</span>
         <input type="number" formControlName="current_progress" />
+        <small>How much you already have saved toward this goal.</small>
       </label>
 
       <label class="field">
-        <span>Probabilidad futura</span>
+        <span>Future probability</span>
         <input type="number" min="0" max="100" formControlName="future_probability" />
+        <small>Optional placeholder for a future probability model. Safe to leave blank.</small>
       </label>
 
       <div class="button-row">
         <button type="submit" class="primary-button" [disabled]="goalForm.invalid || isSaving">
-          {{ isSaving ? 'Guardando...' : editingGoalId ? 'Actualizar objetivo' : 'Crear objetivo' }}
+          {{ isSaving ? 'Saving...' : editingGoalId ? 'Update goal' : 'Create goal' }}
         </button>
         @if (editingGoalId) {
-          <button type="button" class="secondary-button" (click)="cancelEdit()">Cancelar</button>
+          <button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button>
         }
       </div>
     </form>
@@ -74,13 +114,23 @@
   <article class="panel">
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">Listado</p>
-        <h2>Objetivos cargados</h2>
+        <p class="eyebrow">Goal list</p>
+        <h2>Current savings targets</h2>
       </div>
     </div>
 
     @if (isLoading) {
-      <p class="body-copy">Cargando objetivos...</p>
+      <p class="body-copy">Loading goals...</p>
+    } @else if (!goals.length) {
+      <div class="empty-state">
+        <div>
+          <h3>No goals yet.</h3>
+          <p class="body-copy">
+            Add at least one meaningful goal so the app can answer the most important question: how much you can spend
+            without breaking your plan.
+          </p>
+        </div>
+      </div>
     } @else {
       <div class="goal-list">
         @for (goal of goals; track goal.id) {
@@ -88,11 +138,11 @@
             <div class="goal-head">
               <div>
                 <strong>{{ goal.name }}</strong>
-                <small>Prioridad {{ goal.priority }} · fecha objetivo {{ goal.target_date }}</small>
+                <small>{{ priorityLabel(goal.priority) }} priority | target date {{ goal.target_date }}</small>
               </div>
               <div class="table-actions">
-                <button type="button" class="secondary-button" (click)="editGoal(goal)">Editar</button>
-                <button type="button" class="danger-button" (click)="deleteGoal(goal)">Eliminar</button>
+                <button type="button" class="secondary-button" (click)="editGoal(goal)">Edit</button>
+                <button type="button" class="danger-button" (click)="deleteGoal(goal)">Delete</button>
               </div>
             </div>
 
@@ -101,9 +151,9 @@
             </div>
 
             <div class="goal-meta">
-              <span>{{ formatCurrency(goal.current_progress) }} / {{ formatCurrency(goal.target_amount) }}</span>
+              <span>{{ formatCurrency(goal.current_progress, goal.currency) }} / {{ formatCurrency(goal.target_amount, goal.currency) }}</span>
               <span>{{ progressPercent(goal) }}%</span>
-              <span>Aporte ideal: {{ formatCurrency(goal.monthly_contribution_ideal) }}</span>
+              <span>Ideal contribution: {{ formatCurrency(goal.monthly_contribution_ideal, goal.currency) }}</span>
             </div>
           </article>
         }

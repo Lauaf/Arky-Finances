@@ -1,9 +1,10 @@
 <section class="page-header">
   <div>
-    <p class="eyebrow">Escenarios</p>
-    <h1>Presets conservador, base y optimista</h1>
+    <p class="eyebrow">Scenario tuning</p>
+    <h1>Stress test the same plan under different assumptions.</h1>
     <p class="page-copy">
-      Ajustá inflación, salarios, dólar, rendimiento, gasto inesperado y porcentaje objetivo de ahorro.
+      The presets help you judge fragility. Keep the base scenario realistic, push the conservative one harder, and let
+      the optimistic case show upside instead of fantasy.
     </p>
   </div>
 </section>
@@ -12,30 +13,59 @@
   <section class="panel error-panel">{{ errorMessage }}</section>
 }
 
+<section class="panel">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">How to fill this section</p>
+      <h2>Use scenarios to challenge the plan, not to predict the future perfectly.</h2>
+    </div>
+  </div>
+
+  <div class="guide-grid">
+    <article class="guide-card">
+      <span class="guide-label">Conservative</span>
+      <h3>Make this one uncomfortable.</h3>
+      <p class="body-copy">Higher inflation and bigger surprise expenses reveal how quickly your monthly margin disappears.</p>
+    </article>
+
+    <article class="guide-card">
+      <span class="guide-label">Base</span>
+      <h3>This should be your planning default.</h3>
+      <p class="body-copy">Use the assumptions you genuinely expect most of the time, not the most convenient ones.</p>
+    </article>
+
+    <article class="guide-card">
+      <span class="guide-label">Optimistic</span>
+      <h3>Use upside carefully.</h3>
+      <p class="body-copy">Better returns and lower inflation are useful for comparison, but they should not drive daily decisions.</p>
+    </article>
+  </div>
+</section>
+
 <section class="two-column">
   <article class="panel">
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">Escenarios disponibles</p>
-        <h2>Presets del MVP</h2>
+        <p class="eyebrow">Available presets</p>
+        <h2>MVP scenarios</h2>
       </div>
     </div>
 
     @if (isLoading) {
-      <p class="body-copy">Cargando escenarios...</p>
+      <p class="body-copy">Loading scenarios...</p>
     } @else {
       <div class="scenario-list">
         @for (scenario of scenarios; track scenario.id) {
           <button type="button" class="scenario-card" [class.active]="isSelected(scenario.id)" (click)="selectScenario(scenario)">
             <div class="scenario-card-head">
               <strong>{{ scenario.name }}</strong>
-              <span>{{ scenario.is_preset ? 'Preset' : 'Custom' }}</span>
+              <span>{{ scenarioKindLabel(scenario) }}</span>
             </div>
             <p>{{ scenario.description }}</p>
             <div class="scenario-card-meta">
-              <span>Inflación {{ formatPercent(scenario.inflation_monthly) }}</span>
-              <span>Ahorro {{ formatPercent(scenario.target_savings_rate) }}</span>
-              <span>Imprevisto {{ formatCurrency(scenario.unexpected_expense_amount) }}</span>
+              <span>Inflation {{ formatPercent(scenario.inflation_monthly) }}</span>
+              <span>Savings {{ formatPercent(scenario.target_savings_rate) }}</span>
+              <span>Unexpected {{ formatCurrency(scenario.unexpected_expense_amount) }}</span>
             </div>
           </button>
         }
@@ -46,65 +76,77 @@
   <article class="panel">
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">Editor</p>
-        <h2>Parámetros del escenario</h2>
+        <p class="eyebrow">Scenario editor</p>
+        <h2>Adjust the planning assumptions</h2>
       </div>
     </div>
 
     <form class="form-grid" [formGroup]="scenarioForm" (ngSubmit)="saveScenario()">
       <label class="field">
-        <span>Nombre</span>
+        <span>Name</span>
         <input type="text" formControlName="name" />
+        <small>Keep the preset names clear and short.</small>
       </label>
 
       <label class="field">
         <span>Slug</span>
         <input type="text" formControlName="slug" />
+        <small>Used internally. Stick to lowercase and simple words.</small>
       </label>
 
       <label class="field full-width">
-        <span>Descripción</span>
+        <span>Description</span>
         <textarea rows="3" formControlName="description"></textarea>
+        <small>Describe when you would use this scenario.</small>
       </label>
 
       <label class="field">
-        <span>Inflación mensual</span>
+        <span>Monthly inflation</span>
         <input type="number" step="0.01" formControlName="inflation_monthly" />
+        <small>Example: 0.05 means 5% monthly inflation.</small>
       </label>
 
       <label class="field">
-        <span>Ajuste salarial</span>
+        <span>Salary adjustment rate</span>
         <input type="number" step="0.01" formControlName="salary_adjustment_rate" />
+        <small>The raise applied when the salary adjustment interval is reached.</small>
       </label>
 
       <label class="field">
-        <span>Cada cuántos meses</span>
+        <span>Salary adjustment frequency (months)</span>
         <input type="number" min="1" formControlName="salary_adjustment_frequency_months" />
+        <small>How often salary adjustments happen.</small>
       </label>
 
       <label class="field">
-        <span>Variación del dólar</span>
+        <span>Exchange rate variation</span>
         <input type="number" step="0.01" formControlName="exchange_rate_variation_monthly" />
+        <small>Used when a goal is not in the base currency.</small>
       </label>
 
       <label class="field">
-        <span>Rendimiento mensual</span>
+        <span>Monthly investment return</span>
         <input type="number" step="0.01" formControlName="investment_return_monthly" />
+        <small>Applied to reserve balances and accumulated goal savings.</small>
       </label>
 
       <label class="field">
-        <span>Gasto inesperado probable</span>
+        <span>Expected unexpected expense</span>
         <input type="number" formControlName="unexpected_expense_amount" />
+        <small>A likely monthly surprise cost under this scenario.</small>
       </label>
 
       <label class="field">
-        <span>Porcentaje objetivo de ahorro</span>
+        <span>Target savings rate</span>
         <input type="number" step="0.01" formControlName="target_savings_rate" />
+        <small>Example: 0.18 means the scenario aims to save 18% of income.</small>
       </label>
 
-      <button type="submit" class="primary-button" [disabled]="scenarioForm.invalid || isSaving || selectedScenarioId === null">
-        {{ isSaving ? 'Guardando...' : 'Guardar escenario' }}
-      </button>
+      <div class="button-row">
+        <button type="submit" class="primary-button" [disabled]="scenarioForm.invalid || isSaving || selectedScenarioId === null">
+          {{ isSaving ? 'Saving...' : 'Save scenario' }}
+        </button>
+      </div>
     </form>
   </article>
 </section>

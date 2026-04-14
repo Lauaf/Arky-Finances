@@ -4,8 +4,17 @@
       <span class="brand-mark">AF</span>
       <div>
         <p>Arky Finances</p>
-        <small>MVP local para planificación mensual</small>
+        <small>Local-first cash flow planning for real monthly decisions</small>
       </div>
+    </div>
+
+    <div class="sidebar-hero">
+      <p class="sidebar-kicker">Built for clarity</p>
+      <h2>Plan the month before the month runs you.</h2>
+      <p>
+        Track income, fixed costs, goals, and scenario pressure in one clean workspace without turning your personal
+        planning into accounting software.
+      </p>
     </div>
 
     <nav class="nav">
@@ -16,13 +25,15 @@
           class="nav-link"
           [routerLinkActiveOptions]="{ exact: true }"
         >
-          {{ item.label }}
+          <span class="nav-label">{{ item.label }}</span>
+          <small>{{ item.detail }}</small>
         </a>
       }
     </nav>
 
     <div class="sidebar-note">
-      <p>Enfocada en flujo mensual, metas y simulación de escenarios.</p>
+      <p class="sidebar-note-title">Getting started</p>
+      <p>Use the tutorial on the dashboard, then enter income, expenses, and goals in that order for the clearest forecast.</p>
     </div>
   </aside>
 
