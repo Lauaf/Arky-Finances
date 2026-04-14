@@ -11,6 +11,9 @@ dependencies = [
   "psycopg[binary]>=3.2,<4",
 ]
 
+[project.scripts]
+app = "app.main:app"
+
 [tool.uvicorn]
 factory = false
 host = "127.0.0.1"

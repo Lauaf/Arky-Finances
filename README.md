@@ -15,21 +15,19 @@ MVP de planificación financiera personal orientado a flujo mensual, metas de ah
 ```text
 .
 ├─ backend/
-│  ├─ api/
-│  │  └─ index.py
 │  ├─ app/
 │  │  ├─ core/
 │  │  ├─ models/
 │  │  ├─ routers/
 │  │  ├─ schemas/
 │  │  ├─ services/
+│  │  ├─ index.py
 │  │  ├─ init_db.py
 │  │  └─ main.py
 │  ├─ data/
 │  ├─ .env.example
 │  ├─ pyproject.toml
-│  ├─ requirements.txt
-│  └─ vercel.json
+│  └─ requirements.txt
 ├─ frontend/
 │  ├─ src/
 │  │  ├─ app/
@@ -129,7 +127,7 @@ Ejemplo:
 DATABASE_URL=postgresql+psycopg://USER:PASSWORD@HOST:5432/DBNAME
 ```
 
-El backend expone FastAPI a través de [backend/api/index.py](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/api/index.py) y [backend/vercel.json](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/vercel.json).
+El backend para Vercel usa el entrypoint [backend/app/index.py](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/app/index.py) y el script `app = "app.main:app"` en [backend/pyproject.toml](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/pyproject.toml), siguiendo el despliegue estándar de FastAPI en Vercel.
 
 ### 2. Deploy del frontend
 
