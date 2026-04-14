@@ -4,18 +4,67 @@
       <span class="brand-mark">AF</span>
       <div>
         <p>Arky Finances</p>
-        <small>Local-first cash flow planning for real monthly decisions</small>
+        <small>Local-first monthly planning</small>
       </div>
     </div>
 
-    <div class="sidebar-hero">
-      <p class="sidebar-kicker">Built for clarity</p>
-      <h2>Plan the month before the month runs you.</h2>
-      <p>
-        Track income, fixed costs, goals, and scenario pressure in one clean workspace without turning your personal
-        planning into accounting software.
-      </p>
-    </div>
+    <section class="user-switcher">
+      <div class="user-switcher-head">
+        <div>
+          <p class="sidebar-kicker">Active person</p>
+          <strong>{{ activeUser?.name ?? 'Loading...' }}</strong>
+        </div>
+        <button type="button" class="ghost-button compact-button" (click)="toggleAddUser()">
+          {{ isAddingUser ? 'Close' : 'Add person' }}
+        </button>
+      </div>
+
+      <label class="field compact-field">
+        <span>Workspace selector</span>
+        <select [value]="activeUserId ?? ''" (change)="switchUser($event)">
+          @for (user of users; track user.id) {
+            <option [value]="user.id">{{ user.name }}</option>
+          }
+        </select>
+        <small>{{ activeUser?.timezone ?? 'A separate local workspace for each person using the app.' }}</small>
+      </label>
+
+      @if (isAddingUser) {
+        <form class="stack add-user-form" [formGroup]="userForm" (ngSubmit)="createUser()">
+          <label class="field compact-field">
+            <span>Name</span>
+            <input type="text" formControlName="name" placeholder="Example: Laura or Kenji" />
+          </label>
+
+          <label class="field compact-field">
+            <span>Quick region preset</span>
+            <select #regionPreset (change)="applyRegionPreset(regionPreset.value)">
+              <option value="">Choose a preset</option>
+              <option value="argentina">Argentina</option>
+              <option value="japan">Japan</option>
+            </select>
+          </label>
+
+          <label class="field compact-field">
+            <span>Locale</span>
+            <input type="text" formControlName="locale" />
+          </label>
+
+          <label class="field compact-field">
+            <span>Timezone</span>
+            <input type="text" formControlName="timezone" />
+          </label>
+
+          <div class="button-row">
+            <button type="submit" class="primary-button" [disabled]="userForm.invalid">Create user</button>
+          </div>
+        </form>
+      }
+
+      @if (userErrorMessage) {
+        <p class="user-error">{{ userErrorMessage }}</p>
+      }
+    </section>
 
     <nav class="nav">
       @for (item of navigation; track item.route) {
@@ -26,15 +75,9 @@
           [routerLinkActiveOptions]="{ exact: true }"
         >
           <span class="nav-label">{{ item.label }}</span>
-          <small>{{ item.detail }}</small>
         </a>
       }
     </nav>
-
-    <div class="sidebar-note">
-      <p class="sidebar-note-title">Getting started</p>
-      <p>Use the tutorial on the dashboard, then enter income, expenses, and goals in that order for the clearest forecast.</p>
-    </div>
   </aside>
 
   <main class="content">

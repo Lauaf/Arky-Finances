@@ -2,6 +2,19 @@ export type RecurrenceType = 'monthly' | 'one_time';
 export type ExpenseType = 'fixed' | 'variable';
 export type AlertLevel = 'healthy' | 'tight' | 'deficit';
 
+export interface WorkspaceUser {
+  id: number;
+  name: string;
+  locale: string;
+  timezone: string;
+}
+
+export interface WorkspaceUserPayload {
+  name: string;
+  locale: string;
+  timezone: string;
+}
+
 export interface Profile {
   id: number;
   current_balance: number;

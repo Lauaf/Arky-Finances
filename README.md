@@ -53,6 +53,7 @@ Arky Finances is a local-first personal finance planner focused on monthly cash 
 - Full CRUD for expense entries
 - Full CRUD for financial goals
 - A dashboard with key monthly metrics and alert states
+- A local user selector for multiple people sharing the same app on one machine
 - Conservative, base, and optimistic planning scenarios
 - A deterministic 12-month projection engine
 - A simple monthly recommendation engine
@@ -67,6 +68,7 @@ The app no longer seeds example income, expense, or goal rows.
 
 It only creates:
 
+- one default local user workspace
 - one empty financial profile
 - three default scenarios: `Conservative`, `Base`, and `Optimistic`
 

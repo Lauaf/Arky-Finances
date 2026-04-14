@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import DEFAULT_PROJECTION_MONTHS
-from app.models import Expense, Goal, Income, Profile, Scenario
+from app.models import Expense, Goal, Income, Profile, Scenario, User
 from app.schemas.insights import (
     DashboardResponse,
     GoalForecastSummary,
@@ -56,10 +56,10 @@ def month_key(value: date) -> str:
     return value.strftime("%Y-%m")
 
 
-def get_profile(db: Session) -> Profile:
-    profile = db.scalar(select(Profile).order_by(Profile.id).limit(1))
+def get_profile(db: Session, user: User) -> Profile:
+    profile = db.scalar(select(Profile).where(Profile.user_id == user.id).order_by(Profile.id).limit(1))
     if profile is None:
-        profile = Profile(current_balance=0, minimum_cash_buffer=0, base_currency="ARS")
+        profile = Profile(current_balance=0, minimum_cash_buffer=0, base_currency="ARS", user_id=user.id)
         db.add(profile)
         db.commit()
         db.refresh(profile)
@@ -179,16 +179,21 @@ def alert_message_for_level(level: str) -> str:
 
 def build_projection(
     db: Session,
+    user: User,
     scenario_id: int | None = None,
     scenario_slug: str | None = None,
     months: int = DEFAULT_PROJECTION_MONTHS,
 ) -> ProjectionResponse:
     projection_months: list[ProjectionMonth] = []
-    profile = get_profile(db)
+    profile = get_profile(db, user)
     scenario = get_scenario(db, scenario_id=scenario_id, scenario_slug=scenario_slug)
-    incomes = list(db.scalars(select(Income).order_by(Income.start_date, Income.id)).all())
-    expenses = list(db.scalars(select(Expense).order_by(Expense.start_date, Expense.id)).all())
-    goals = list(db.scalars(select(Goal).order_by(Goal.priority, Goal.target_date, Goal.id)).all())
+    incomes = list(
+        db.scalars(select(Income).where(Income.user_id == user.id).order_by(Income.start_date, Income.id)).all()
+    )
+    expenses = list(
+        db.scalars(select(Expense).where(Expense.user_id == user.id).order_by(Expense.start_date, Expense.id)).all()
+    )
+    goals = list(db.scalars(select(Goal).where(Goal.user_id == user.id).order_by(Goal.priority, Goal.target_date, Goal.id)).all())
 
     current_month = month_start(date.today())
     liquid_balance = to_float(profile.current_balance)
@@ -355,9 +360,14 @@ def build_projection(
     )
 
 
-def build_dashboard(db: Session, scenario_id: int | None = None, scenario_slug: str | None = None) -> DashboardResponse:
-    profile = get_profile(db)
-    projection = build_projection(db=db, scenario_id=scenario_id, scenario_slug=scenario_slug, months=12)
+def build_dashboard(
+    db: Session,
+    user: User,
+    scenario_id: int | None = None,
+    scenario_slug: str | None = None,
+) -> DashboardResponse:
+    profile = get_profile(db, user)
+    projection = build_projection(db=db, user=user, scenario_id=scenario_id, scenario_slug=scenario_slug, months=12)
     first_month = projection.months[0]
     active_goals = [goal for goal in projection.goals if goal.remaining_amount > 0]
     return DashboardResponse(
@@ -381,10 +391,11 @@ def build_dashboard(db: Session, scenario_id: int | None = None, scenario_slug: 
 
 def build_recommendation(
     db: Session,
+    user: User,
     scenario_id: int | None = None,
     scenario_slug: str | None = None,
 ) -> RecommendationResponse:
-    projection = build_projection(db=db, scenario_id=scenario_id, scenario_slug=scenario_slug, months=1)
+    projection = build_projection(db=db, user=user, scenario_id=scenario_id, scenario_slug=scenario_slug, months=1)
     first_month = projection.months[0]
     plan_sustainable = first_month.recommended_savings >= first_month.ideal_savings_target or first_month.ideal_savings_target == 0
     explanation = (

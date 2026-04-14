@@ -1,30 +1,58 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { UserContextService } from './user-context.service';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
+  private readonly userContext = inject(UserContextService);
   private readonly baseUrl = environment.apiBaseUrl;
 
-  get<T>(path: string, params?: Record<string, string | number | boolean | null | undefined>): Observable<T> {
+  get<T>(
+    path: string,
+    params?: Record<string, string | number | boolean | null | undefined>,
+    includeUserContext = true,
+  ): Observable<T> {
     return this.http.get<T>(`${this.baseUrl}${path}`, {
       params: this.buildParams(params),
+      headers: this.buildHeaders(includeUserContext),
     });
   }
 
-  post<T, P>(path: string, payload: P): Observable<T> {
-    return this.http.post<T>(`${this.baseUrl}${path}`, payload);
+  post<T, P>(path: string, payload: P, includeUserContext = true): Observable<T> {
+    return this.http.post<T>(`${this.baseUrl}${path}`, payload, {
+      headers: this.buildHeaders(includeUserContext),
+    });
   }
 
-  put<T, P>(path: string, payload: P): Observable<T> {
-    return this.http.put<T>(`${this.baseUrl}${path}`, payload);
+  put<T, P>(path: string, payload: P, includeUserContext = true): Observable<T> {
+    return this.http.put<T>(`${this.baseUrl}${path}`, payload, {
+      headers: this.buildHeaders(includeUserContext),
+    });
   }
 
-  delete(path: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}${path}`);
+  delete(path: string, includeUserContext = true): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}${path}`, {
+      headers: this.buildHeaders(includeUserContext),
+    });
+  }
+
+  private buildHeaders(includeUserContext: boolean): HttpHeaders {
+    if (!includeUserContext) {
+      return new HttpHeaders();
+    }
+
+    const activeUserId = this.userContext.activeUserId();
+    if (!activeUserId) {
+      return new HttpHeaders();
+    }
+
+    return new HttpHeaders({
+      'X-Arky-User': String(activeUserId),
+    });
   }
 
   private buildParams(params?: Record<string, string | number | boolean | null | undefined>): HttpParams {

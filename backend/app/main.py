@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import API_PREFIX, APP_NAME, CORS_ORIGINS, DATABASE_URL
 from app.core.database import SessionLocal, init_db
-from app.routers import expenses, goals, incomes, insights, profile, scenarios
+from app.routers import expenses, goals, incomes, insights, profile, scenarios, users
 from app.services.seed import seed_database
 
 
@@ -45,6 +45,7 @@ def root() -> dict[str, str]:
 
 
 app.include_router(profile.router, prefix=API_PREFIX)
+app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(incomes.router, prefix=API_PREFIX)
 app.include_router(expenses.router, prefix=API_PREFIX)
 app.include_router(goals.router, prefix=API_PREFIX)

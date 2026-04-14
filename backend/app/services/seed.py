@@ -1,14 +1,21 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Profile, Scenario
+from app.models import Profile, Scenario, User
 
 
 def seed_database(db: Session) -> None:
-    profile = db.scalar(select(Profile).limit(1))
+    user = db.scalar(select(User).order_by(User.id.asc()).limit(1))
+    if user is None:
+        user = User(name="Primary user", locale="en-US", timezone="America/Argentina/Buenos_Aires")
+        db.add(user)
+        db.flush()
+
+    profile = db.scalar(select(Profile).where(Profile.user_id == user.id).limit(1))
     if profile is None:
         db.add(
             Profile(
+                user_id=user.id,
                 current_balance=0,
                 minimum_cash_buffer=0,
                 base_currency="ARS",

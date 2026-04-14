@@ -1,22 +1,21 @@
 <section class="page-header">
   <div>
-    <p class="eyebrow">Financial cockpit</p>
-    <h1>Monthly control, savings targets, and scenario pressure in one view.</h1>
+    <p class="eyebrow">Overview</p>
+    <h1>A calmer monthly planning view.</h1>
     <p class="page-copy">
-      Arky Finances turns your monthly cash flow into a practical planning loop: what you can spend, what you should
-      save, and how quickly you reach each goal under different assumptions.
+      Focus on the decision first: how much room the month has, how much should move into savings, and whether the plan
+      still holds under the active scenario.
     </p>
   </div>
 
   <div class="header-actions">
     <label class="field scenario-select">
-      <span>Active scenario</span>
+      <span>Scenario</span>
       <select [value]="selectedScenarioId ?? ''" (change)="onScenarioChange($event)">
         @for (scenario of scenarios; track scenario.id) {
           <option [value]="scenario.id">{{ scenario.name }}</option>
         }
       </select>
-      <small>Switch scenarios to compare the same plan under different inflation, salary, and savings assumptions.</small>
     </label>
   </div>
 </section>
@@ -26,189 +25,93 @@
 }
 
 @if (isLoading) {
-  <section class="panel loading-panel">Loading your financial planning workspace...</section>
+  <section class="panel loading-panel">Loading your planning workspace...</section>
 } @else if (dashboard && recommendation && projection) {
-  <section class="hero-panel">
+  <section class="hero-panel compact-hero">
     <div class="hero-copy">
-      <p class="eyebrow">This month at a glance</p>
+      <p class="eyebrow">Current read</p>
       @if (isFreshWorkspace) {
-        <h2>Start with your own numbers. The workspace is intentionally blank.</h2>
+        <h2>This workspace is blank on purpose.</h2>
         <p class="body-copy">
-          No demo data is loaded anymore. Add income, expenses, and goals once, and Arky Finances will turn the empty
-          workspace into a real monthly planning system.
+          Add real income, expenses, and goals for each person using the app. No demo financial records are preloaded.
         </p>
       } @else {
-        <h2>{{ dashboard.alert_message }}</h2>
-        <p class="body-copy">
-          The selected scenario estimates your recommended savings transfer and your safe flexible spending room before
-          the month starts slipping.
-        </p>
+        <h2>{{ alertLabel(dashboard.alert_level) }}</h2>
+        <p class="body-copy">{{ dashboard.alert_message }}</p>
       }
 
       <div class="badge-row">
-        <span class="badge">Base currency: {{ dashboard.base_currency }}</span>
-        <span class="badge">12-month horizon</span>
-        <span class="badge">{{ dashboard.active_goals.length }} active goals</span>
+        <span class="badge">Currency: {{ dashboard.base_currency }}</span>
         <span class="badge">Scenario: {{ dashboard.scenario.name }}</span>
+        <span class="badge">{{ dashboard.active_goals.length }} active goals</span>
       </div>
     </div>
 
-    <div class="hero-summary">
-      @if (isFreshWorkspace) {
-        <div class="hero-summary-card">
-          <p>Income entries</p>
-          <strong>{{ setupSnapshot.incomes }}</strong>
-          <small>Add your salary or reliable recurring inflows first.</small>
-        </div>
-
-        <div class="hero-summary-card accent">
-          <p>Expense entries</p>
-          <strong>{{ setupSnapshot.expenses }}</strong>
-          <small>Once fixed and variable costs are in, the monthly guidance becomes useful.</small>
-        </div>
-      } @else {
-        <div class="hero-summary-card">
-          <p>Recommended free spend</p>
-          <strong>{{ formatCurrency(dashboard.recommended_free_spend) }}</strong>
-          <small>Maximum flexible spending suggested for this month.</small>
-        </div>
-
-        <div class="hero-summary-card accent">
-          <p>Recommended savings</p>
-          <strong>{{ formatCurrency(recommendation.recommended_savings) }}</strong>
-          <small>Suggested transfer before treating leftover cash as available.</small>
-        </div>
-      }
+    <div class="hero-summary single-column">
+      <div class="hero-summary-card accent">
+        <p>Recommended savings</p>
+        <strong>{{ formatCurrency(recommendation.recommended_savings) }}</strong>
+        <small>{{ isFreshWorkspace ? 'Appears once the first real monthly flow is entered.' : 'Suggested transfer for the active month.' }}</small>
+      </div>
     </div>
   </section>
 
-  @if (tutorialVisible) {
-    <section class="panel tutorial-panel">
-      <div class="panel-toolbar">
-        <div>
-          <p class="eyebrow">Friendly setup guide</p>
-          <h2>Follow these steps once and the forecasts become meaningful fast.</h2>
-          <p class="section-copy">
-            This guide is designed for a blank workspace. Start with the most reliable data first, then refine as you
-            learn what matters.
-          </p>
-        </div>
+  <section class="panel tutorial-strip">
+    <div class="tutorial-strip-copy">
+      <p class="eyebrow">Quick start</p>
+      <h2>{{ tutorialVisible ? 'Set up only what matters first.' : 'Need the setup guide again?' }}</h2>
+      <p class="body-copy">
+        {{ tutorialVisible
+          ? 'For each person, start with balance, one or two reliable income lines, fixed expenses, and the goals that truly matter.'
+          : 'Bring back the lightweight setup guide whenever someone new starts using the app.' }}
+      </p>
+    </div>
 
-        <button type="button" class="ghost-button" (click)="dismissTutorial()">Hide guide</button>
-      </div>
-
-      <div class="guide-grid">
+    @if (tutorialVisible) {
+      <ul class="checklist compact-checklist">
         @for (step of setupSteps; track step.title) {
-          <article class="guide-card setup-card" [class.done]="step.done">
-            <span class="guide-label">{{ step.done ? 'Done' : 'Next step' }}</span>
-            <h3>{{ step.title }}</h3>
-            <p class="body-copy">{{ step.description }}</p>
-            <button type="button" class="secondary-button" [routerLink]="step.route">{{ step.cta }}</button>
-          </article>
+          <li>{{ step.done ? 'Done:' : 'Next:' }} {{ step.title }}</li>
         }
-      </div>
-    </section>
-  } @else {
-    <section class="panel tutorial-toggle">
-      <div>
-        <p class="eyebrow">Guide hidden</p>
-        <h2>Need the onboarding tutorial again?</h2>
-        <p class="body-copy">Bring back the step-by-step setup guide anytime if your friend wants a walkthrough.</p>
-      </div>
-      <button type="button" class="secondary-button" (click)="showTutorial()">Show tutorial</button>
-    </section>
-  }
+      </ul>
+      <button type="button" class="ghost-button" (click)="dismissTutorial()">Hide guide</button>
+    } @else {
+      <button type="button" class="secondary-button" (click)="showTutorial()">Show guide</button>
+    }
+  </section>
 
-  @if (isFreshWorkspace) {
-    <section class="panel">
-      <div class="empty-state starter-state">
-        <div>
-          <p class="eyebrow">Blank workspace</p>
-          <h2>You are starting from a clean slate.</h2>
-          <p class="body-copy">
-            That is intentional. There is no demo data anymore, so the numbers you see next will belong only to your
-            own plan.
-          </p>
-        </div>
-
-        <div class="empty-state-actions">
-          <button type="button" class="primary-button" routerLink="/incomes">Start with income</button>
-          <button type="button" class="secondary-button" routerLink="/expenses">Add expenses</button>
-          <button type="button" class="secondary-button" routerLink="/goals">Define goals</button>
-        </div>
-      </div>
-    </section>
-  }
-
-  <section class="metrics-grid">
+  <section class="metrics-grid compact-grid">
     <app-metric-card
       label="Current balance"
       [value]="formatCurrency(dashboard.current_balance)"
-      hint="Available liquid balance before this month's income and expenses."
+      hint="Cash currently available to plan with."
       tone="neutral"
     />
     <app-metric-card
-      label="Monthly income"
+      label="Planned income"
       [value]="formatCurrency(dashboard.estimated_income_monthly)"
-      hint="Income expected this month under the selected scenario."
-      tone="success"
+      hint="Income expected this month."
+      [tone]="amountTone(dashboard.estimated_income_monthly)"
     />
     <app-metric-card
-      label="Fixed expenses"
-      [value]="formatCurrency(dashboard.fixed_expenses_monthly)"
-      hint="Recurring obligations that define the rigid floor of the month."
-    />
-    <app-metric-card
-      label="Variable expenses"
-      [value]="formatCurrency(dashboard.variable_expenses_monthly)"
-      hint="Flexible spending assumptions such as groceries, transport, and lifestyle."
-    />
-    <app-metric-card
-      label="Available to save"
-      [value]="formatCurrency(dashboard.estimated_available_savings)"
-      hint="Cash left after covering projected expenses."
-      [tone]="amountTone(dashboard.estimated_available_savings)"
+      label="Planned expenses"
+      [value]="formatCurrency(projectedExpenseTotal)"
+      hint="Fixed, variable, and expected surprise costs combined."
+      [tone]="amountTone(-projectedExpenseTotal)"
     />
     <app-metric-card
       label="Free spend cap"
       [value]="formatCurrency(dashboard.recommended_free_spend)"
-      hint="Suggested upper limit for discretionary spending this month."
+      hint="Suggested upper limit for discretionary spending."
       [tone]="metricTone(dashboard.alert_level)"
     />
   </section>
-
-  @if (isFreshWorkspace) {
-    <section class="panel">
-      <div class="info-callout">
-        <p class="eyebrow">Before the forecast starts</p>
-        <h2>The advisor and charts unlock once the basics are in.</h2>
-        <p class="body-copy">
-          Add at least one income and one expense entry. Until then, the planner has no real monthly flow to evaluate.
-        </p>
-      </div>
-    </section>
-  } @else {
-    <section class="alert-banner" [class.tight]="dashboard.alert_level === 'tight'" [class.deficit]="dashboard.alert_level === 'deficit'">
-      <div>
-        <p class="eyebrow">Monthly risk signal</p>
-        <h2>{{ alertLabel(dashboard.alert_level) }}</h2>
-        <p class="body-copy">{{ dashboard.alert_message }}</p>
-      </div>
-
-      <div class="alert-metrics">
-        <span>Minimum cash buffer: {{ formatCurrency(dashboard.minimum_cash_buffer) }}</span>
-        <span>Ideal savings target: {{ formatCurrency(dashboard.ideal_savings_target) }}</span>
-        <span>Scenario: {{ dashboard.scenario.name }}</span>
-      </div>
-    </section>
-  }
 
   <section class="two-column">
     <article class="panel">
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">{{ isFreshWorkspace ? 'What happens next' : 'Monthly recommendation' }}</p>
-          <h2>{{ isFreshWorkspace ? 'Add the first real numbers, then the advisor becomes actionable.' : 'How much to save and how much room is left to spend.' }}</h2>
+          <p class="eyebrow">Recommendation</p>
+          <h2>{{ isFreshWorkspace ? 'The advisor becomes useful after the first monthly flow is entered.' : 'What to save and what can stay flexible.' }}</h2>
         </div>
       </div>
 
@@ -217,8 +120,7 @@
           <div>
             <h3>No recommendation yet.</h3>
             <p class="body-copy">
-              The monthly recommendation is deterministic, not generic. It needs actual income and expense inputs before
-              it can tell you how much to save or spend.
+              The app stays quiet until it has enough real information to make a deterministic recommendation.
             </p>
           </div>
           <div class="empty-state-actions">
@@ -231,14 +133,14 @@
           <app-metric-card
             label="Recommended savings"
             [value]="formatCurrency(recommendation.recommended_savings)"
-            [hint]="'Ideal target under this scenario: ' + formatCurrency(recommendation.ideal_savings_target)"
+            [hint]="'Ideal scenario target: ' + formatCurrency(recommendation.ideal_savings_target)"
             [tone]="recommendation.plan_sustainable ? 'success' : 'warning'"
           />
           <app-metric-card
-            label="Maximum flexible spend"
-            [value]="formatCurrency(recommendation.recommended_free_spend)"
-            hint="Suggested cap for non-essential spending in the current month."
-            [tone]="metricTone(recommendation.alert_level)"
+            label="Available after expenses"
+            [value]="formatCurrency(dashboard.estimated_available_savings)"
+            hint="Cash left before assigning savings."
+            [tone]="amountTone(dashboard.estimated_available_savings)"
           />
         </div>
 
@@ -252,7 +154,7 @@
       <div class="panel-heading">
         <div>
           <p class="eyebrow">Financial profile</p>
-          <h2>Starting balance and safety buffer.</h2>
+          <h2>Balance, buffer, and base currency.</h2>
         </div>
       </div>
 
@@ -260,19 +162,16 @@
         <label class="field">
           <span>Current balance</span>
           <input type="number" formControlName="current_balance" />
-          <small>Enter the cash you can actively plan with today.</small>
         </label>
 
         <label class="field">
           <span>Minimum cash buffer</span>
           <input type="number" formControlName="minimum_cash_buffer" />
-          <small>This is the cushion you prefer not to dip below.</small>
         </label>
 
         <label class="field">
           <span>Base currency</span>
           <input type="text" maxlength="3" formControlName="base_currency" />
-          <small>Keep it as ARS for now unless you are planning in a different main currency.</small>
         </label>
 
         <div class="button-row">
@@ -284,26 +183,13 @@
     </article>
   </section>
 
-  @if (isFreshWorkspace) {
-    <section class="panel">
-      <div class="empty-state">
-        <div>
-          <p class="eyebrow">Forecast visuals</p>
-          <h2>Charts and month-by-month projections appear after setup.</h2>
-          <p class="body-copy">
-            Once income and expenses are in place, the projection engine will render balance, savings, goal progress,
-            and scenario comparison automatically.
-          </p>
-        </div>
-      </div>
-    </section>
-  } @else {
-    <section class="charts-grid">
+  @if (!isFreshWorkspace) {
+    <section class="two-column">
       <article class="panel chart-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">Projection</p>
-            <h2>Liquid balance and savings over time.</h2>
+            <p class="eyebrow">Primary chart</p>
+            <h2>Balance and savings across 12 months.</h2>
           </div>
         </div>
         <div class="chart-frame">
@@ -311,155 +197,114 @@
         </div>
       </article>
 
-      <article class="panel chart-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">Scenario comparison</p>
-            <h2>How the balance changes across your presets.</h2>
-          </div>
-        </div>
-        <div class="chart-frame">
-          <canvas baseChart [data]="comparisonChartData" [options]="lineChartOptions" [type]="'line'"></canvas>
-        </div>
-      </article>
-    </section>
-
-    <section class="charts-grid">
-      <article class="panel chart-panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">Goal progress</p>
-            <h2>Projected progress versus target amount.</h2>
-          </div>
-        </div>
-        <div class="chart-frame">
-          <canvas baseChart [data]="goalsChartData" [options]="goalChartOptions" [type]="'bar'"></canvas>
-        </div>
-      </article>
-
       <article class="panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">Selected scenario</p>
-            <h2>{{ selectedScenario?.name }}</h2>
+            <p class="eyebrow">Goal snapshot</p>
+            <h2>{{ dashboard.active_goals.length ? 'What the current plan is likely to complete.' : 'No active goals yet.' }}</h2>
           </div>
         </div>
 
-        <p class="body-copy">{{ selectedScenario?.description }}</p>
-
-        <div class="scenario-stats">
-          <span>Monthly inflation: {{ formatPercent(selectedScenario?.inflation_monthly ?? 0) }}</span>
-          <span>Salary adjustment: {{ formatPercent(selectedScenario?.salary_adjustment_rate ?? 0) }}</span>
-          <span>Target savings rate: {{ formatPercent(selectedScenario?.target_savings_rate ?? 0) }}</span>
-          <span>Unexpected expense: {{ formatCurrency(selectedScenario?.unexpected_expense_amount ?? 0) }}</span>
-        </div>
-
-        <div class="soft-divider"></div>
-
-        <div class="badge-row">
-          <span class="badge">{{ setupSnapshot.incomes }} income items</span>
-          <span class="badge">{{ setupSnapshot.expenses }} expense items</span>
-          <span class="badge">{{ setupSnapshot.goals }} goals</span>
-        </div>
+        @if (!dashboard.active_goals.length) {
+          <div class="empty-state">
+            <p class="body-copy">Add a goal to make the recommendation engine optimize for something meaningful.</p>
+            <div class="empty-state-actions">
+              <button type="button" class="primary-button" routerLink="/goals">Create a goal</button>
+            </div>
+          </div>
+        } @else {
+          <div class="goal-list compact-goal-list">
+            @for (goal of dashboard.active_goals.slice(0, 3); track goal.id) {
+              <article class="goal-card">
+                <div class="goal-head">
+                  <div>
+                    <strong>{{ goal.name }}</strong>
+                    <small>Priority {{ goal.priority }} | target {{ goal.target_date }}</small>
+                  </div>
+                  <span class="status-chip" [class.warning]="goalStatusTone(goal.status) === 'warning'">
+                    {{ goalStatusLabel(goal.status) }}
+                  </span>
+                </div>
+                <div class="goal-bar">
+                  <span [style.width.%]="goal.percent_complete"></span>
+                </div>
+                <div class="goal-meta">
+                  <span>{{ formatCurrency(goal.projected_progress) }} / {{ formatCurrency(goal.target_amount) }}</span>
+                  <span>{{ goal.percent_complete }}%</span>
+                </div>
+              </article>
+            }
+          </div>
+        }
       </article>
     </section>
-  }
 
-  <section class="panel">
-    <div class="panel-heading">
-      <div>
-        <p class="eyebrow">Goals snapshot</p>
-        <h2>Active goals and their estimated finish month.</h2>
-      </div>
-    </div>
-
-    @if (!dashboard.active_goals.length) {
-      <div class="empty-state">
-        <div>
-          <h3>No active goals yet.</h3>
-          <p class="body-copy">
-            Add your first goal to turn the recommendation engine into a real planning tool instead of a simple cash
-            tracker.
-          </p>
-        </div>
-        <div class="empty-state-actions">
-          <button type="button" class="primary-button" routerLink="/goals">Create a goal</button>
-        </div>
-      </div>
-    } @else {
-      <div class="goal-list">
-        @for (goal of dashboard.active_goals; track goal.id) {
-          <article class="goal-card">
-            <div class="goal-head">
+    <details class="panel collapsible-panel">
+      <summary>Scenario comparison and assumptions</summary>
+      <div class="collapsible-body">
+        <div class="two-column nested-grid">
+          <article class="panel inner-panel chart-panel">
+            <div class="panel-heading">
               <div>
-                <strong>{{ goal.name }}</strong>
-                <small>Priority {{ goal.priority }} | target date {{ goal.target_date }}</small>
+                <p class="eyebrow">Comparison</p>
+                <h2>Projected balance by scenario.</h2>
               </div>
-              <span class="status-chip" [class.warning]="goalStatusTone(goal.status) === 'warning'">
-                {{ goalStatusLabel(goal.status) }}
-              </span>
             </div>
-            <div class="goal-bar">
-              <span [style.width.%]="goal.percent_complete"></span>
-            </div>
-            <div class="goal-meta">
-              <span>{{ formatCurrency(goal.projected_progress) }} / {{ formatCurrency(goal.target_amount) }}</span>
-              <span>{{ goal.percent_complete }}%</span>
-              <span>
-                {{ goal.projected_completion_month ? 'Projected completion: ' + goal.projected_completion_month : 'Not completed within 12 months' }}
-              </span>
+            <div class="chart-frame">
+              <canvas baseChart [data]="comparisonChartData" [options]="lineChartOptions" [type]="'line'"></canvas>
             </div>
           </article>
-        }
-      </div>
-    }
-  </section>
 
-  @if (!isFreshWorkspace) {
-    <section class="panel">
-      <div class="panel-heading">
-        <div>
-          <p class="eyebrow">Monthly detail</p>
-          <h2>Projected month-by-month cash flow.</h2>
+          <article class="panel inner-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Selected scenario</p>
+                <h2>{{ selectedScenario?.name }}</h2>
+              </div>
+            </div>
+
+            <p class="body-copy">{{ selectedScenario?.description }}</p>
+            <div class="scenario-stats">
+              <span>Inflation: {{ formatPercent(selectedScenario?.inflation_monthly ?? 0) }}</span>
+              <span>Salary adjustment: {{ formatPercent(selectedScenario?.salary_adjustment_rate ?? 0) }}</span>
+              <span>Savings rate: {{ formatPercent(selectedScenario?.target_savings_rate ?? 0) }}</span>
+              <span>Unexpected expense: {{ formatCurrency(selectedScenario?.unexpected_expense_amount ?? 0) }}</span>
+            </div>
+          </article>
         </div>
       </div>
+    </details>
 
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Month</th>
-              <th>Income</th>
-              <th>Expenses</th>
-              <th>Recommended savings</th>
-              <th>Free spend cap</th>
-              <th>Closing balance</th>
-              <th>Alert</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (month of projection.months; track month.month) {
+    <details class="panel collapsible-panel">
+      <summary>Monthly projection detail</summary>
+      <div class="collapsible-body">
+        <div class="table-wrapper">
+          <table>
+            <thead>
               <tr>
-                <td>{{ formatMonth(month.month) }}</td>
-                <td>{{ formatCurrency(month.income_total) }}</td>
-                <td>{{ formatCurrency(month.total_expenses) }}</td>
-                <td>{{ formatCurrency(month.recommended_savings) }}</td>
-                <td>{{ formatCurrency(month.free_spending_max) }}</td>
-                <td>{{ formatCurrency(month.closing_balance) }}</td>
-                <td>
-                  <span
-                    class="status-chip"
-                    [class.warning]="month.alert_level === 'tight'"
-                    [class.danger]="month.alert_level === 'deficit'"
-                  >
-                    {{ alertLabel(month.alert_level) }}
-                  </span>
-                </td>
+                <th>Month</th>
+                <th>Income</th>
+                <th>Expenses</th>
+                <th>Savings</th>
+                <th>Free spend</th>
+                <th>Closing balance</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (month of projection.months; track month.month) {
+                <tr>
+                  <td>{{ formatMonth(month.month) }}</td>
+                  <td>{{ formatCurrency(month.income_total) }}</td>
+                  <td>{{ formatCurrency(month.total_expenses) }}</td>
+                  <td>{{ formatCurrency(month.recommended_savings) }}</td>
+                  <td>{{ formatCurrency(month.free_spending_max) }}</td>
+                  <td>{{ formatCurrency(month.closing_balance) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
-    </section>
+    </details>
   }
 }

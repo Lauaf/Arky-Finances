@@ -169,6 +169,17 @@ export class DashboardPageComponent {
     return this.scenarios.find((scenario) => scenario.id === this.selectedScenarioId);
   }
 
+  protected get projectedExpenseTotal(): number {
+    if (!this.dashboard) {
+      return 0;
+    }
+    return (
+      this.dashboard.fixed_expenses_monthly +
+      this.dashboard.variable_expenses_monthly +
+      this.dashboard.unexpected_expenses_monthly
+    );
+  }
+
   protected get setupSteps(): SetupStep[] {
     const profileReady = (this.dashboard?.current_balance ?? 0) > 0 || (this.dashboard?.minimum_cash_buffer ?? 0) > 0;
     return [
