@@ -12,10 +12,35 @@ class Base(DeclarativeBase):
 
 IS_SQLITE = DATABASE_URL.startswith("sqlite")
 
+
+def build_connect_args() -> dict[str, object]:
+    if IS_SQLITE:
+        return {"check_same_thread": False}
+
+    # Supabase transaction pooler is the right fit for Vercel/serverless, but
+    # PgBouncer-style transaction pooling does not support prepared statements.
+    if "supabase" in DATABASE_URL or "pooler" in DATABASE_URL:
+        return {"prepare_threshold": None}
+
+    return {}
+
+
+def build_engine_options() -> dict[str, object]:
+    if IS_SQLITE:
+        return {}
+
+    return {
+        "pool_size": 1,
+        "max_overflow": 2,
+        "pool_recycle": 300,
+    }
+
+
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if IS_SQLITE else {},
+    connect_args=build_connect_args(),
     pool_pre_ping=not IS_SQLITE,
+    **build_engine_options(),
     future=True,
 )
 
