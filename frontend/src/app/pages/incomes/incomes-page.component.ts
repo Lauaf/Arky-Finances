@@ -28,7 +28,15 @@ export class IncomesPageComponent {
   protected editingIncomeId: number | null = null;
   protected isLoading = true;
   protected isSaving = false;
+  protected isSavingSalary = false;
   protected errorMessage = '';
+
+  protected readonly salaryForm = this.formBuilder.nonNullable.group({
+    amount: [0, [Validators.required, Validators.min(1)]],
+    currency: [this.defaultCurrency(), [Validators.required, Validators.minLength(3), Validators.maxLength(3)]],
+    start_date: [this.todayString(), Validators.required],
+    is_salary_adjusted: [false],
+  });
 
   protected readonly incomeForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -43,11 +51,30 @@ export class IncomesPageComponent {
   constructor() {
     effect(() => {
       const currency = this.defaultCurrency();
+      if (!this.salaryForm.controls.currency.dirty) {
+        this.salaryForm.patchValue({ currency }, { emitEvent: false });
+      }
       if (this.editingIncomeId === null && !this.incomeForm.controls.currency.dirty) {
         this.incomeForm.patchValue({ currency }, { emitEvent: false });
       }
     });
     this.loadIncomes();
+  }
+
+  protected get primarySalary(): Income | undefined {
+    return (
+      this.incomes.find((income) => income.recurrence === 'monthly' && /salary|sueldo|paycheck/i.test(income.name)) ??
+      this.incomes.find((income) => income.recurrence === 'monthly')
+    );
+  }
+
+  protected get scheduledIncomes(): Income[] {
+    return this.incomes.filter((income) => income.recurrence === 'one_time');
+  }
+
+  protected get otherMonthlyIncomes(): Income[] {
+    const primarySalaryId = this.primarySalary?.id;
+    return this.incomes.filter((income) => income.recurrence === 'monthly' && income.id !== primarySalaryId);
   }
 
   protected applyPreset(preset: IncomePreset): void {
@@ -120,6 +147,41 @@ export class IncomesPageComponent {
     this.incomeForm.patchValue({
       recurrence: 'one_time',
       is_salary_adjusted: false,
+    });
+  }
+
+  protected savePrimarySalary(): void {
+    if (this.salaryForm.invalid) {
+      this.salaryForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSavingSalary = true;
+    const rawValue = this.salaryForm.getRawValue();
+    const payload: IncomePayload = {
+      name: 'Primary salary',
+      amount: rawValue.amount,
+      currency: rawValue.currency.toUpperCase(),
+      start_date: rawValue.start_date,
+      recurrence: 'monthly',
+      is_salary_adjusted: rawValue.is_salary_adjusted,
+      notes:
+        'Single salary source used for monthly projections. Update this amount whenever the real salary changes.',
+    };
+
+    const request$ = this.primarySalary
+      ? this.incomeService.update(this.primarySalary.id, payload)
+      : this.incomeService.create(payload);
+
+    request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.isSavingSalary = false;
+        this.loadIncomes();
+      },
+      error: () => {
+        this.isSavingSalary = false;
+        this.errorMessage = 'I could not save the primary salary.';
+      },
     });
   }
 
@@ -196,6 +258,7 @@ export class IncomesPageComponent {
       .subscribe({
         next: (incomes) => {
           this.incomes = incomes;
+          this.patchSalaryForm();
           this.isLoading = false;
           this.isSaving = false;
         },
@@ -235,6 +298,23 @@ export class IncomesPageComponent {
 
   private defaultCurrency(): string {
     return this.userContext.baseCurrency() || 'ARS';
+  }
+
+  private patchSalaryForm(): void {
+    const salary = this.primarySalary;
+    if (!salary) {
+      return;
+    }
+
+    this.salaryForm.patchValue(
+      {
+        amount: salary.amount,
+        currency: salary.currency,
+        start_date: salary.start_date,
+        is_salary_adjusted: salary.is_salary_adjusted,
+      },
+      { emitEvent: false },
+    );
   }
 
   private monthOffsetString(offset: number): string {

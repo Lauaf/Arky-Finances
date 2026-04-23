@@ -66,6 +66,98 @@
     </article>
   </section>
 
+  <section class="panel remaining-panel">
+    <div class="panel-heading">
+      <div>
+        <p class="eyebrow">Money left by month</p>
+        <h2>Salary minus normal and scheduled expenses.</h2>
+        <p class="body-copy">
+          This is the practical control view: as you add monthly expenses or one-time scheduled expenses, each month
+          updates to show what remains before savings and what is still spendable after the recommendation.
+        </p>
+      </div>
+    </div>
+
+    <div class="two-column nested-grid">
+      <article class="panel inner-panel chart-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Remaining cash</p>
+            <h2>Before and after recommended savings</h2>
+          </div>
+        </div>
+        <div class="chart-frame">
+          <canvas baseChart [data]="remainingMoneyChartData" [options]="lineChartOptions" [type]="'line'"></canvas>
+        </div>
+      </article>
+
+      <article class="panel inner-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">How to read this</p>
+            <h2>The scheduled column is the one to watch.</h2>
+          </div>
+        </div>
+        <p class="body-copy">
+          Recurring expenses repeat every month. Scheduled expenses are one-time payments placed in a specific month,
+          like repairs, trips, medical bills, large purchases, or taxes.
+        </p>
+        <div class="scenario-stats">
+          <span>Recurring income: salary and dependable monthly inflows.</span>
+          <span>Scheduled income: bonuses or one-time payments.</span>
+          <span>Recurring expenses: rent, subscriptions, food budgets.</span>
+          <span>Scheduled expenses: one-off payments in the month selected.</span>
+        </div>
+      </article>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Money in</th>
+            <th>Recurring expenses</th>
+            <th>Scheduled expenses</th>
+            <th>Scenario surprise</th>
+            <th>Remaining before savings</th>
+            <th>Recommended savings</th>
+            <th>Spendable after savings</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (month of availableMonths; track month.month) {
+            <tr>
+              <td>
+                <strong>{{ formatMonth(month.month) }}</strong>
+              </td>
+              <td>
+                {{ formatCurrency(totalMoneyIn(month)) }}
+                @if (month.scheduled_income > 0) {
+                  <small class="row-note">Includes {{ formatCurrency(month.scheduled_income) }} scheduled</small>
+                }
+              </td>
+              <td>{{ formatCurrency(month.recurring_expenses) }}</td>
+              <td>{{ formatCurrency(month.scheduled_expenses) }}</td>
+              <td>{{ formatCurrency(month.unexpected_expenses) }}</td>
+              <td>
+                <span
+                  class="status-chip"
+                  [class.warning]="remainingTone(month.available_after_expenses) === 'warning'"
+                  [class.danger]="remainingTone(month.available_after_expenses) === 'danger'"
+                >
+                  {{ formatCurrency(month.available_after_expenses) }}
+                </span>
+              </td>
+              <td>{{ formatCurrency(month.recommended_savings) }}</td>
+              <td>{{ formatCurrency(month.free_spending_max) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <section class="panel comparison-panel">
     <div class="panel-heading">
       <div>

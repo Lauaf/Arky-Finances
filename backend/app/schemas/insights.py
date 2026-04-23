@@ -36,7 +36,11 @@ class GoalProgressPoint(BaseModel):
 class ProjectionMonth(BaseModel):
     month: str
     opening_balance: float
+    recurring_income: float
+    scheduled_income: float
     income_total: float
+    recurring_expenses: float
+    scheduled_expenses: float
     fixed_expenses: float
     variable_expenses: float
     unexpected_expenses: float

@@ -1,10 +1,10 @@
 <section class="page-header">
   <div>
-    <p class="eyebrow">Income setup</p>
-    <h1>Capture the inflows that truly fund the month.</h1>
+    <p class="eyebrow">Income control</p>
+    <h1>Keep one salary number current, then add only exceptions.</h1>
     <p class="page-copy">
-      Start with the income you trust most, then layer in bonuses or side work. Cleaner income inputs make the
-      recommendations more believable.
+      The planner assumes your salary is the main recurring income. When it changes every few months, update the same
+      saved salary record and every projection will use the new value.
     </p>
   </div>
 </section>
@@ -13,41 +13,67 @@
   <section class="panel error-panel">{{ errorMessage }}</section>
 }
 
-<section class="panel">
+<section class="panel salary-control-panel">
   <div class="panel-heading">
     <div>
-      <p class="eyebrow">How to fill this section</p>
-      <h2>Enter income the same way it arrives in real life.</h2>
+      <p class="eyebrow">Primary salary</p>
+      <h2>{{ primarySalary ? 'Update the salary used by projections.' : 'Create your salary once.' }}</h2>
+      <p class="body-copy">
+        This is the main number the app uses to calculate what remains after expenses. If your salary increases, change
+        this amount instead of creating a new salary row.
+      </p>
     </div>
   </div>
 
-  <div class="guide-grid">
-    <article class="guide-card">
-      <span class="guide-label">Monthly salary</span>
-      <h3>Use recurring income for paychecks.</h3>
-      <p class="body-copy">Keep salary adjustment enabled if you want scenario salary bumps to affect this line item.</p>
-    </article>
+  <form class="salary-grid" [formGroup]="salaryForm" (ngSubmit)="savePrimarySalary()">
+    <label class="field">
+      <span>Current monthly salary</span>
+      <input type="number" formControlName="amount" />
+      <small>The take-home salary amount you want projections to use from now on.</small>
+    </label>
 
-    <article class="guide-card">
-      <span class="guide-label">Side work</span>
-      <h3>Separate freelance or consulting work.</h3>
-      <p class="body-copy">Add regular freelance income as monthly only if it is dependable enough to plan around.</p>
-    </article>
+    <label class="field">
+      <span>Currency</span>
+      <input type="text" maxlength="3" formControlName="currency" />
+      <small>Uses your active user currency by default.</small>
+    </label>
 
-    <article class="guide-card">
-      <span class="guide-label">One-time cash</span>
-      <h3>Bonuses should stay one time.</h3>
-      <p class="body-copy">Use the actual month you expect the payment so the projection does not overestimate future cash flow.</p>
-    </article>
-  </div>
+    <label class="field">
+      <span>Effective from</span>
+      <input type="date" formControlName="start_date" />
+      <small>Usually this month. Future months will use this salary once active.</small>
+    </label>
+
+    <label class="checkbox-field compact-checkbox">
+      <input type="checkbox" formControlName="is_salary_adjusted" />
+      <span>Also project future raises from the active scenario</span>
+    </label>
+
+    <div class="salary-summary">
+      <span>Saved salary</span>
+      <strong>{{ primarySalary ? formatCurrency(primarySalary.amount, primarySalary.currency) : 'Not set yet' }}</strong>
+      <small>
+        {{ primarySalary
+          ? 'Editing this panel updates the same database record.'
+          : 'Create it once, then only update the amount when reality changes.' }}
+      </small>
+    </div>
+
+    <div class="button-row">
+      <button type="submit" class="primary-button" [disabled]="salaryForm.invalid || isSavingSalary">
+        {{ isSavingSalary ? 'Saving salary...' : primarySalary ? 'Update salary' : 'Create salary' }}
+      </button>
+    </div>
+  </form>
 </section>
 
 <section class="two-column">
   <article class="panel">
     <div class="panel-heading">
       <div>
-        <p class="eyebrow">Income form</p>
-        <h2>{{ editingIncomeId ? 'Edit income entry' : 'Add income entry' }}</h2>
+        <p class="eyebrow">Extra income</p>
+        <h2>{{ editingIncomeId ? 'Edit extra income' : 'Schedule extra income' }}</h2>
+        <p class="body-copy">Use this only for bonuses, freelance payments, reimbursements, or other money outside the salary.</p>
       </div>
     </div>
 
@@ -55,7 +81,6 @@
       <div class="planner-block">
         <p class="eyebrow">Quick presets</p>
         <div class="planner-chip-row">
-          <button type="button" class="ghost-button planner-chip" (click)="applyPreset('salary')">Monthly salary</button>
           <button type="button" class="ghost-button planner-chip" (click)="applyPreset('freelance')">Freelance</button>
           <button type="button" class="ghost-button planner-chip" (click)="applyPreset('bonus')">Bonus</button>
           <button type="button" class="ghost-button planner-chip" (click)="applyPreset('sale')">Asset sale</button>
@@ -133,7 +158,7 @@
     <div class="panel-heading">
       <div>
         <p class="eyebrow">Income list</p>
-        <h2>Current inflows</h2>
+        <h2>Saved income records</h2>
       </div>
     </div>
 
@@ -150,6 +175,26 @@
         </div>
       </div>
     } @else {
+      <div class="income-breakdown">
+        <article class="info-callout">
+          <span class="guide-label">Main salary</span>
+          <strong>{{ primarySalary ? formatCurrency(primarySalary.amount, primarySalary.currency) : 'Not set' }}</strong>
+          <p class="body-copy">This is the recurring amount used by projections unless you update it.</p>
+        </article>
+
+        <article class="info-callout">
+          <span class="guide-label">Scheduled extras</span>
+          <strong>{{ scheduledIncomes.length }}</strong>
+          <p class="body-copy">One-time payments that only affect the selected month.</p>
+        </article>
+
+        <article class="info-callout">
+          <span class="guide-label">Other recurring</span>
+          <strong>{{ otherMonthlyIncomes.length }}</strong>
+          <p class="body-copy">Extra monthly income lines besides the salary.</p>
+        </article>
+      </div>
+
       <div class="table-wrapper">
         <table>
           <thead>

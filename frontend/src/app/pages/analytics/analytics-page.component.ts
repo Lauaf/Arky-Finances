@@ -140,6 +140,30 @@ export class AnalyticsPageComponent {
     };
   }
 
+  protected get remainingMoneyChartData(): ChartConfiguration<'line'>['data'] {
+    return {
+      labels: this.availableMonths.map((month) => this.formatMonth(month.month)),
+      datasets: [
+        {
+          data: this.availableMonths.map((month) => month.available_after_expenses),
+          label: 'Remaining before savings',
+          borderColor: '#0f5a52',
+          backgroundColor: 'rgba(27, 127, 115, 0.14)',
+          fill: true,
+          tension: 0.28,
+        },
+        {
+          data: this.availableMonths.map((month) => month.free_spending_max),
+          label: 'Spendable after savings',
+          borderColor: '#81411a',
+          backgroundColor: 'rgba(129, 65, 26, 0.1)',
+          fill: true,
+          tension: 0.28,
+        },
+      ],
+    };
+  }
+
   protected get comparisonMetrics(): ComparisonMetric[] {
     if (!this.primaryMonth || !this.comparisonMonth) {
       return [];
@@ -199,6 +223,20 @@ export class AnalyticsPageComponent {
 
   protected formatMonth(value: string): string {
     return this.displayFormat.formatMonth(value);
+  }
+
+  protected totalMoneyIn(month: ProjectionMonth): number {
+    return month.recurring_income + month.scheduled_income;
+  }
+
+  protected remainingTone(value: number): 'neutral' | 'success' | 'warning' | 'danger' {
+    if (value < 0) {
+      return 'danger';
+    }
+    if (value === 0) {
+      return 'warning';
+    }
+    return 'success';
   }
 
   protected metricTone(metric: ComparisonMetric): 'neutral' | 'success' | 'warning' | 'danger' {

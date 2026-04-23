@@ -212,7 +212,17 @@ def build_projection(
         target_month = add_months(current_month, month_index)
         opening_balance = liquid_balance
 
-        income_total = sum(project_income_amount(income, scenario, month_index, target_month) for income in incomes)
+        recurring_income = sum(
+            project_income_amount(income, scenario, month_index, target_month)
+            for income in incomes
+            if income.recurrence == "monthly"
+        )
+        scheduled_income = sum(
+            project_income_amount(income, scenario, month_index, target_month)
+            for income in incomes
+            if income.recurrence != "monthly"
+        )
+        income_total = round_money(recurring_income + scheduled_income)
         fixed_expenses = sum(
             project_expense_amount(expense, scenario, month_index, target_month)
             for expense in expenses
@@ -222,6 +232,16 @@ def build_projection(
             project_expense_amount(expense, scenario, month_index, target_month)
             for expense in expenses
             if expense.expense_type == "variable"
+        )
+        recurring_expenses = sum(
+            project_expense_amount(expense, scenario, month_index, target_month)
+            for expense in expenses
+            if expense.recurrence == "monthly"
+        )
+        scheduled_expenses = sum(
+            project_expense_amount(expense, scenario, month_index, target_month)
+            for expense in expenses
+            if expense.recurrence != "monthly"
         )
         unexpected_expenses = round_money(
             to_float(scenario.unexpected_expense_amount)
@@ -298,7 +318,11 @@ def build_projection(
             ProjectionMonth(
                 month=month_key(target_month),
                 opening_balance=round_money(opening_balance),
+                recurring_income=round_money(recurring_income),
+                scheduled_income=round_money(scheduled_income),
                 income_total=round_money(income_total),
+                recurring_expenses=round_money(recurring_expenses),
+                scheduled_expenses=round_money(scheduled_expenses),
                 fixed_expenses=round_money(fixed_expenses),
                 variable_expenses=round_money(variable_expenses),
                 unexpected_expenses=unexpected_expenses,

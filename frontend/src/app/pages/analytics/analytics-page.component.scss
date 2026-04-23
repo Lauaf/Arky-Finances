@@ -22,6 +22,28 @@
   gap: 1rem;
 }
 
+.remaining-panel {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.nested-grid {
+  margin-bottom: 0;
+}
+
+.inner-panel {
+  padding: 1.1rem;
+  box-shadow: none;
+}
+
+.scenario-stats {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  color: var(--muted);
+}
+
 .comparison-controls {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 240px));

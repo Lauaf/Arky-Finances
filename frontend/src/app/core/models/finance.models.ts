@@ -120,7 +120,11 @@ export interface GoalProgressPoint {
 export interface ProjectionMonth {
   month: string;
   opening_balance: number;
+  recurring_income: number;
+  scheduled_income: number;
   income_total: number;
+  recurring_expenses: number;
+  scheduled_expenses: number;
   fixed_expenses: number;
   variable_expenses: number;
   unexpected_expenses: number;
