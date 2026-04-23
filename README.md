@@ -131,9 +131,13 @@ DATABASE_URL=postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.c
 For Supabase, use the transaction pooler connection string from Supabase. The backend normalizes
 `postgresql://` and `postgres://` URLs to the SQLAlchemy psycopg driver internally.
 
-If `DATABASE_URL` is missing on Vercel, the backend now fails fast instead of silently writing to
-temporary SQLite. This prevents the app from appearing to work while storing data in a disposable
-serverless filesystem.
+If the database password contains symbols such as `@`, `#`, `/`, `:` or spaces, URL-encode it before
+placing it inside `DATABASE_URL`. A password problem usually appears in `/health/db` as an
+authentication or connection error.
+
+If `DATABASE_URL` is missing on Vercel, the backend now reports that the database is unconfigured
+instead of silently writing to temporary SQLite. This prevents the app from appearing to work while
+storing data in a disposable serverless filesystem.
 
 The backend entrypoint for Vercel is [backend/app/index.py](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/app/index.py).
 
@@ -155,6 +159,13 @@ After setting `DATABASE_URL` and redeploying the backend, verify:
 
 - `GET /` returns `"database_provider": "supabase"`
 - `GET /health/db` returns counts for the Arky Finances tables
+- `GET /api/health/db` returns the same diagnostic through the frontend proxy
+
+If the backend still does not connect, open `/health/db` first. The useful fields are:
+
+- `database_configured`: `false` means `DATABASE_URL` is missing from the backend Vercel project
+- `database_provider`: should be `supabase`
+- `database_error`: shows the Supabase/Postgres error without exposing the connection string
 
 ### Frontend project
 

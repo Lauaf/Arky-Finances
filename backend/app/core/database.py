@@ -1,16 +1,24 @@
 from collections.abc import Generator
 
+from fastapi import HTTPException, status
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-from app.core.config import DATABASE_URL
+from app.core.config import DATABASE_CONFIG_ERROR, DATABASE_URL
 
 
 class Base(DeclarativeBase):
     pass
 
 
-IS_SQLITE = DATABASE_URL.startswith("sqlite")
+IS_SQLITE = DATABASE_URL.startswith("sqlite") if DATABASE_URL else False
+DATABASE_ENGINE_ERROR: str | None = None
+
+
+def sanitize_database_message(message: str) -> str:
+    if DATABASE_URL:
+        return message.replace(DATABASE_URL, "[database-url-redacted]")
+    return message
 
 
 def build_connect_args() -> dict[str, object]:
@@ -36,24 +44,42 @@ def build_engine_options() -> dict[str, object]:
     }
 
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args=build_connect_args(),
-    pool_pre_ping=not IS_SQLITE,
-    **build_engine_options(),
-    future=True,
-)
+try:
+    engine = (
+        create_engine(
+            DATABASE_URL,
+            connect_args=build_connect_args(),
+            pool_pre_ping=not IS_SQLITE,
+            **build_engine_options(),
+            future=True,
+        )
+        if DATABASE_URL
+        else None
+    )
+except Exception as exc:
+    DATABASE_ENGINE_ERROR = sanitize_database_message(str(exc))
+    engine = None
 
-SessionLocal = sessionmaker(
-    bind=engine,
-    autoflush=False,
-    autocommit=False,
-    expire_on_commit=False,
-    future=True,
+SessionLocal = (
+    sessionmaker(
+        bind=engine,
+        autoflush=False,
+        autocommit=False,
+        expire_on_commit=False,
+        future=True,
+    )
+    if engine is not None
+    else None
 )
 
 
 def get_db() -> Generator[Session, None, None]:
+    if SessionLocal is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=DATABASE_ENGINE_ERROR or DATABASE_CONFIG_ERROR or "Database is not configured.",
+        )
+
     db = SessionLocal()
     try:
         yield db
@@ -62,6 +88,9 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
+    if engine is None:
+        raise RuntimeError(DATABASE_ENGINE_ERROR or DATABASE_CONFIG_ERROR or "Database is not configured.")
+
     from app.models import expense, goal, income, profile, scenario, user  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
@@ -70,6 +99,9 @@ def init_db() -> None:
 
 
 def run_lightweight_migrations() -> None:
+    if engine is None:
+        raise RuntimeError(DATABASE_ENGINE_ERROR or DATABASE_CONFIG_ERROR or "Database is not configured.")
+
     inspector = inspect(engine)
     existing_tables = set(inspector.get_table_names())
 

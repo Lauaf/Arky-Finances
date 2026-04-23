@@ -29,19 +29,20 @@ def get_database_url() -> str:
         return _normalize_database_url(raw_url)
 
     if IS_VERCEL and not ALLOW_TEMP_SQLITE:
-        raise RuntimeError(
-            "DATABASE_URL or POSTGRES_URL is required on Vercel. "
-            "Set it to the Supabase Postgres connection string and redeploy."
-        )
+        return ""
 
     return LOCAL_DATABASE_URL
 
 
 def get_database_mode(database_url: str) -> str:
+    if not database_url:
+        return "unconfigured"
     return "sqlite" if database_url.startswith("sqlite") else "external"
 
 
 def get_database_provider(database_url: str) -> str:
+    if not database_url:
+        return "unconfigured"
     lowered_url = database_url.lower()
     if lowered_url.startswith("sqlite"):
         return "sqlite"
@@ -64,6 +65,12 @@ def get_cors_origins() -> list[str]:
 
 
 DATABASE_URL = get_database_url()
+DATABASE_CONFIGURED = bool(DATABASE_URL)
+DATABASE_CONFIG_ERROR = (
+    None
+    if DATABASE_CONFIGURED
+    else "DATABASE_URL or POSTGRES_URL is required on Vercel. Set it on the backend project and redeploy."
+)
 DATABASE_MODE = get_database_mode(DATABASE_URL)
 DATABASE_PROVIDER = get_database_provider(DATABASE_URL)
 CORS_ORIGINS = get_cors_origins()
