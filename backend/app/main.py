@@ -2,8 +2,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
-from app.core.config import API_PREFIX, APP_NAME, CORS_ORIGINS, DATABASE_URL
+from app.core.config import API_PREFIX, APP_NAME, CORS_ORIGINS, DATABASE_MODE, DATABASE_PROVIDER
 from app.core.database import SessionLocal, init_db
 from app.routers import expenses, goals, incomes, insights, profile, scenarios, users
 from app.services.seed import seed_database
@@ -33,14 +34,36 @@ def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/health/db")
+def database_healthcheck() -> dict[str, str | int]:
+    with SessionLocal() as db:
+        db.execute(text("select 1"))
+        table_counts = {
+            "users": db.execute(text("select count(*) from users")).scalar_one(),
+            "profiles": db.execute(text("select count(*) from profiles")).scalar_one(),
+            "incomes": db.execute(text("select count(*) from incomes")).scalar_one(),
+            "expenses": db.execute(text("select count(*) from expenses")).scalar_one(),
+            "goals": db.execute(text("select count(*) from goals")).scalar_one(),
+            "scenarios": db.execute(text("select count(*) from scenarios")).scalar_one(),
+        }
+
+    return {
+        "status": "ok",
+        "database_mode": DATABASE_MODE,
+        "database_provider": DATABASE_PROVIDER,
+        **table_counts,
+    }
+
+
 @app.get("/")
 def root() -> dict[str, str]:
-    database_mode = "external" if not DATABASE_URL.startswith("sqlite") else "sqlite"
     return {
         "name": APP_NAME,
         "status": "ok",
-        "database_mode": database_mode,
+        "database_mode": DATABASE_MODE,
+        "database_provider": DATABASE_PROVIDER,
         "docs_url": "/docs",
+        "database_health_url": "/health/db",
     }
 
 

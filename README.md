@@ -11,7 +11,7 @@ Arky Finances is a local-first personal finance planner focused on monthly cash 
 - Frontend: Angular 20
 - Backend: FastAPI + Pydantic + SQLAlchemy
 - Local database: SQLite
-- Production on Vercel: FastAPI serverless with `DATABASE_URL` support and a temporary SQLite fallback when no external database is configured
+- Production on Vercel: FastAPI serverless with a required external Postgres database through `DATABASE_URL`
 - Communication: REST
 
 ## Repository structure
@@ -31,7 +31,9 @@ Arky Finances is a local-first personal finance planner focused on monthly cash 
 |   |-- data/
 |   |-- .env.example
 |   |-- pyproject.toml
-|   `-- requirements.txt
+|   |-- requirements.txt
+|   `-- sql/
+|       `-- supabase_init.sql
 |-- frontend/
 |   |-- src/
 |   |   |-- app/
@@ -117,17 +119,42 @@ Create a Vercel project with:
 
 Environment variables:
 
-- Optional for startup: none
-- Recommended for real persistence: `DATABASE_URL` or `POSTGRES_URL`
+- Required for production persistence: `DATABASE_URL` or `POSTGRES_URL`
 - Optional CORS override: `CORS_ORIGINS`
 
 Example:
 
 ```text
-DATABASE_URL=postgresql+psycopg://USER:PASSWORD@HOST:5432/DBNAME
+DATABASE_URL=postgresql://postgres.PROJECT_REF:PASSWORD@REGION.pooler.supabase.com:6543/postgres
 ```
 
+For Supabase, use the transaction pooler connection string from Supabase. The backend normalizes
+`postgresql://` and `postgres://` URLs to the SQLAlchemy psycopg driver internally.
+
+If `DATABASE_URL` is missing on Vercel, the backend now fails fast instead of silently writing to
+temporary SQLite. This prevents the app from appearing to work while storing data in a disposable
+serverless filesystem.
+
 The backend entrypoint for Vercel is [backend/app/index.py](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/app/index.py).
+
+### Supabase database setup
+
+Run [backend/sql/supabase_init.sql](/C:/Users/Usuario/Desktop/QUIERO%20PLATA/backend/sql/supabase_init.sql)
+in Supabase SQL Editor once. It creates only the Arky Finances tables:
+
+- `users`
+- `profiles`
+- `incomes`
+- `expenses`
+- `goals`
+- `scenarios`
+
+It does not drop, truncate, or modify unrelated tables such as `garden_lines`.
+
+After setting `DATABASE_URL` and redeploying the backend, verify:
+
+- `GET /` returns `"database_provider": "supabase"`
+- `GET /health/db` returns counts for the Arky Finances tables
 
 ### Frontend project
 
@@ -156,6 +183,7 @@ The frontend uses:
 
 - `GET /`
 - `GET /health`
+- `GET /health/db`
 - `GET/POST/PUT/DELETE /api/incomes`
 - `GET/POST/PUT/DELETE /api/expenses`
 - `GET/POST/PUT/DELETE /api/goals`
@@ -172,12 +200,6 @@ The current project has been validated with:
 - backend import and API smoke checks
 - frontend production build
 - local dashboard flow with clean seeded scenarios and no demo records
-
-## Serverless fallback limitation
-
-If you run the backend on Vercel without `DATABASE_URL`, the app uses temporary SQLite storage. That is enough for deployment and short demos, but the data can disappear between cold starts, restarts, or redeployments.
-
-For persistent use, connect an external database.
 
 ## Out of scope
 

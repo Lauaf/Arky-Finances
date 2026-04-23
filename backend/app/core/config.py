@@ -6,6 +6,7 @@ API_PREFIX = "/api"
 BASE_CURRENCY = "ARS"
 DEFAULT_PROJECTION_MONTHS = 12
 IS_VERCEL = bool(os.getenv("VERCEL"))
+ALLOW_TEMP_SQLITE = os.getenv("ALLOW_TEMP_SQLITE") == "1"
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = Path("/tmp/arky-finances") if IS_VERCEL else BACKEND_DIR / "data"
@@ -27,7 +28,28 @@ def get_database_url() -> str:
     if raw_url:
         return _normalize_database_url(raw_url)
 
+    if IS_VERCEL and not ALLOW_TEMP_SQLITE:
+        raise RuntimeError(
+            "DATABASE_URL or POSTGRES_URL is required on Vercel. "
+            "Set it to the Supabase Postgres connection string and redeploy."
+        )
+
     return LOCAL_DATABASE_URL
+
+
+def get_database_mode(database_url: str) -> str:
+    return "sqlite" if database_url.startswith("sqlite") else "external"
+
+
+def get_database_provider(database_url: str) -> str:
+    lowered_url = database_url.lower()
+    if lowered_url.startswith("sqlite"):
+        return "sqlite"
+    if "supabase" in lowered_url:
+        return "supabase"
+    if lowered_url.startswith("postgresql"):
+        return "postgres"
+    return "external"
 
 
 def get_cors_origins() -> list[str]:
@@ -42,4 +64,6 @@ def get_cors_origins() -> list[str]:
 
 
 DATABASE_URL = get_database_url()
+DATABASE_MODE = get_database_mode(DATABASE_URL)
+DATABASE_PROVIDER = get_database_provider(DATABASE_URL)
 CORS_ORIGINS = get_cors_origins()
