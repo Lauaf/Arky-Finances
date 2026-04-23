@@ -95,11 +95,8 @@ where not exists (select 1 from public.users);
 insert into public.profiles (user_id, current_balance, minimum_cash_buffer, base_currency)
 select users.id, 0, 0, 'ARS'
 from public.users
-where not exists (
-  select 1
-  from public.profiles
-  where profiles.user_id = users.id
-);
+left join public.profiles on profiles.user_id = users.id
+where profiles.id is null;
 
 insert into public.scenarios (
   name,
